@@ -1,0 +1,29 @@
+{
+  "name": "prest-aor",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome": "^1.1.7",
+    "@fortawesome/fontawesome-free-brands": "^5.0.12",
+    "@fortawesome/fontawesome-free-solid": "^5.0.12",
+    "@fortawesome/react-fontawesome": "^0.0.19",
+    "@material-ui/icons": "^1.0.0-beta.43",
+    "dom-helpers": "^3.3.1",
+    "immutable": "^3.8.2",
+    "material-ui": "^0.20.0",
+    "ra-data-json-server": "^2.0.0-RC2",
+    "react": "^16.3.2",
+    "react-admin": "^2.0.0-RC2",
+    "react-dom": "^16.3.2",
+    "react-scripts": "1.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "flow-bin": "^0.71.0"
+  }
+}
