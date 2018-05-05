@@ -2,7 +2,10 @@
 	proxy /api localhost:3000 {
 		transparent
 	}
-    proxy /rest localhost:8080 {
+  proxy /rest localhost:8080 {
 		transparent
+	}
+	proxy /app {
+		root ./web/build
 	}
 }
