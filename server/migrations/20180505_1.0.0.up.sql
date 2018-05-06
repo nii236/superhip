@@ -16,19 +16,48 @@ CREATE TABLE users (
 );
 
 CREATE TABLE schools (
-	id UUID PRIMARY KEY NOT NULL,
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
 	name TEXT NOT NULL
 );
 
 
 CREATE TABLE teams (
-	id UUID PRIMARY KEY NOT NULL,
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
 	name TEXT NOT NULL,
 	user_id UUID NOT NULL REFERENCES users(id)
 );
 
 CREATE TABLE students (
-	id UUID PRIMARY KEY NOT NULL,
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
 	name TEXT NOT NULL,
 	team_id UUID NOT NULL REFERENCES teams(id)
 );
+
+-- many to many relationship between identities and roles.
+-- many to many relationship between roles and permissions.
+-- roles can have a parent role (inheriting permissions).
+
+
+-- CREATE TABLE roles (
+-- 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+-- 	parent_id UUID NOT NULL REFERENCES roles(id),
+-- 	name TEXT NOT NULL
+-- );
+
+-- CREATE TABLE permissions (
+-- 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+-- 	name TEXT NOT NULL
+-- );
+
+-- CREATE TABLE roles_users (
+-- 	role_id UUID NOT NULL REFERENCES roles(id),
+-- 	user_id UUID NOT NULL REFERENCES users(id),
+-- 	name TEXT NOT NULL
+-- );
+
+
+-- CREATE TABLE roles_permissions (
+-- 	role_id UUID NOT NULL REFERENCES roles(id),
+-- 	permission_id UUID NOT NULL REFERENCES permissions(id),
+-- 	name TEXT NOT NULL
+-- );

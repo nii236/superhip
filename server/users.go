@@ -45,10 +45,12 @@ type User struct {
 	Role         string    `db:"role" json:"role,omitempty"`
 }
 
-type UserResponse struct {
-	Total   int     `json:"total"`
-	Data    []*User `json:"data"`
-	Message string  `json:"message,omitempty"`
+func mustMarshal(v interface{}) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func usersGetList(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -62,13 +64,16 @@ func usersGetList(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	result := []*User{}
 	err = conn.Select(&result, userQueries["all"])
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
 
-	resp := &UserResponse{
+	resp := &Response{
 		Total: len(result),
-		Data:  result,
+		Data:  mustMarshal(result),
 	}
 
 	err = json.NewEncoder(w).Encode(resp)
@@ -92,9 +97,9 @@ func usersGetOne(w http.ResponseWriter, r *http.Request) (int, error) {
 	log.Println("ID", req.ID)
 	err = conn.Get(result, userQueries["get"], req.ID)
 	if err != nil && err == sql.ErrNoRows {
-		resp := &UserResponse{
+		resp := &Response{
 			Total:   0,
-			Data:    []*User{},
+			Data:    mustMarshal([]*User{}),
 			Message: err.Error(),
 		}
 		err = json.NewEncoder(w).Encode(resp)
@@ -103,9 +108,9 @@ func usersGetOne(w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, err
 	}
-	resp := &UserResponse{
+	resp := &Response{
 		Total: 1,
-		Data:  []*User{result},
+		Data:  mustMarshal([]*User{result}),
 	}
 
 	err = json.NewEncoder(w).Encode(resp)
@@ -120,12 +125,15 @@ func usersGetMany(w http.ResponseWriter, r *http.Request) (int, error) {
 	id := chi.URLParam(r, "id")
 	result := []*User{}
 	err := conn.Select(result, userQueries["get"], id)
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-	resp := &UserResponse{
+	resp := &Response{
 		Total: len(result),
-		Data:  result,
+		Data:  mustMarshal(result),
 	}
 
 	err = json.NewEncoder(w).Encode(resp)
@@ -150,7 +158,10 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	existing := &User{}
 	err = conn.Get(existing, userQueries["get"], req.ID)
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
 
@@ -170,7 +181,10 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	log.Printf("%+v", existing)
 	rows, err := conn.NamedQuery(userQueries["update"], existing)
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
 
@@ -183,9 +197,9 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(&UserResponse{
+	json.NewEncoder(w).Encode(&Response{
 		Total: 1,
-		Data:  []*User{updated},
+		Data:  mustMarshal([]*User{updated}),
 	})
 
 	return 200, nil
@@ -201,7 +215,10 @@ func usersUpdateMany(w http.ResponseWriter, r *http.Request) (int, error) {
 	for _, id := range req.IDs {
 		existing := &User{}
 		err = conn.Get(existing, userQueries["get"], id)
-		if err != nil {
+		if err != nil && err == sql.ErrNoRows {
+			return 404, err
+		}
+		if err != nil && err != sql.ErrNoRows {
 			return 500, err
 		}
 
@@ -238,9 +255,9 @@ func usersUpdateMany(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	}
 
-	json.NewEncoder(w).Encode(&UserResponse{
+	json.NewEncoder(w).Encode(&Response{
 		Total: len(updatedUsers),
-		Data:  updatedUsers,
+		Data:  mustMarshal(updatedUsers),
 	})
 
 	return 200, nil
@@ -268,7 +285,10 @@ func usersCreate(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	log.Printf("%+v", user)
 	rows, err := conn.NamedQuery(userQueries["create"], user)
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
 
@@ -281,9 +301,9 @@ func usersCreate(w http.ResponseWriter, r *http.Request) (int, error) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(&UserResponse{
+	json.NewEncoder(w).Encode(&Response{
 		Total: 1,
-		Data:  []*User{created},
+		Data:  mustMarshal([]*User{created}),
 	})
 
 	defer r.Body.Close()
@@ -299,13 +319,16 @@ func usersDelete(w http.ResponseWriter, r *http.Request) (int, error) {
 	}
 	deleted := &User{}
 	err = conn.Get(deleted, userQueries["archive"], req.ID)
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
 
-	json.NewEncoder(w).Encode(&UserResponse{
+	json.NewEncoder(w).Encode(&Response{
 		Total: 1,
-		Data:  []*User{deleted},
+		Data:  mustMarshal([]*User{deleted}),
 	})
 	return 200, nil
 }
@@ -321,14 +344,17 @@ func usersDeleteMany(w http.ResponseWriter, r *http.Request) (int, error) {
 	for _, id := range req.IDs {
 		user := &User{}
 		err = conn.Get(user, userQueries["archive"], id)
-		if err != nil {
+		if err != nil && err == sql.ErrNoRows {
+			return 404, err
+		}
+		if err != nil && err != sql.ErrNoRows {
 			return 500, err
 		}
 		deleted = append(deleted, user)
 	}
-	json.NewEncoder(w).Encode(&UserResponse{
+	json.NewEncoder(w).Encode(&Response{
 		Total: 1,
-		Data:  deleted,
+		Data:  mustMarshal(deleted),
 	})
 	return 200, nil
 }

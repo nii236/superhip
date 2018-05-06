@@ -1,6 +1,10 @@
 package main
 
-import uuid "github.com/satori/go.uuid"
+import (
+	"encoding/json"
+
+	uuid "github.com/satori/go.uuid"
+)
 
 // GetListRequest is the JSON request that comes in for the userGetList handler
 type GetListRequest struct {
@@ -67,4 +71,11 @@ type DeleteRequest struct {
 // DeleteManyRequest is the JSON request that comes in for the userDeleteMany handler
 type DeleteManyRequest struct {
 	IDs []uuid.UUID `json:"ids,omitempty"`
+}
+
+// Response is the generic response for react admin
+type Response struct {
+	Total   int             `json:"total"`
+	Data    json.RawMessage `json:"data"`
+	Message string          `json:"message,omitempty"`
 }
