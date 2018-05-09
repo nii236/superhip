@@ -8,7 +8,7 @@ CREATE TABLE users (
 	password_hash text NOT NULL,
 	password_reset_token text NOT NULL DEFAULT 'none',
 	role text NOT NULL DEFAULT 'teacher',
-	data jsonb NOT NULL DEFAULT '{}',
+	metadata jsonb NOT NULL DEFAULT '{}',
 	archived boolean NOT NULL DEFAULT false,
 	archived_on timestamp,
 	created_at timestamp NOT NULL DEFAULT NOW(),

@@ -39,6 +39,8 @@ export const UserEdit = props => {
 				<TextInput source="first_name" />
 				<TextInput source="last_name" />
 				<TextInput source="email" />
+				<TextInput source="role" />
+				<TextInput source="password" />
 			</SimpleForm>
 		</Edit>
 	)
@@ -50,6 +52,8 @@ export const UserCreate = props => (
 			<TextInput source="first_name" />
 			<TextInput source="last_name" />
 			<TextInput source="email" />
+			<TextInput source="role" />
+			<TextInput source="password" />
 		</SimpleForm>
 	</Create>
 )
@@ -70,7 +74,7 @@ const ResourceList = props => {
 
 const dataProvider = data.Provider("http://localhost:8080")
 const App = props => {
-	const UsersList = ListFactory(IList(["id", "first_name", "last_name", "email"]))
+	const UsersList = ListFactory(IList(["first_name", "last_name", "email", "role"]))
 
 	const SitesList = ListFactory(IList(["id", "name"]))
 

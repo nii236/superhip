@@ -43,7 +43,7 @@ const Provider = (apiUrl, httpClient = fetchJson) => {
 			case GET_MANY_REFERENCE: {
 				options.method = "POST"
 				options.body = JSON.stringify(params)
-				url = `${apiUrl}/${resource}/get/many`
+				url = `${apiUrl}/${resource}/get/many/reference`
 				break
 			}
 			case UPDATE:
@@ -85,7 +85,6 @@ const Provider = (apiUrl, httpClient = fetchJson) => {
 			case GET_LIST:
 				return { total: json.total, data: json.data }
 			case GET_ONE:
-				console.log("data: json.data[0]", json.data[0])
 				return { data: json.data[0] }
 			case CREATE:
 				return { data: json.data[0] }

@@ -6,32 +6,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/nleof/goyesql"
 )
-
-var conn *sqlx.DB
-var userQueries goyesql.Queries
-var schoolQueries goyesql.Queries
-var teamQueries goyesql.Queries
-var studentQueries goyesql.Queries
 
 const secret = "gelatinous-proabolition-sighted-flea"
 
-func init() {
-	userQueries = goyesql.MustParseFile("./queries/users.sql")
-	schoolQueries = goyesql.MustParseFile("./queries/schools.sql")
-	teamQueries = goyesql.MustParseFile("./queries/teams.sql")
-	studentQueries = goyesql.MustParseFile("./queries/students.sql")
-}
-
 func main() {
 	r := chi.NewRouter()
-	db()
+	db, err := newDB()
+	if err != nil {
+		panic(err)
+	}
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -49,20 +36,21 @@ func main() {
 	r.Use(cors.Handler)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Mount("/auth", authRouter())
-	r.Mount("/users", userRouter())
+	r.Mount("/auth", authRouter(db))
+	r.Mount("/users", userRouter(db))
 
 	log.Println("Starting on :8080")
 	log.Fatalln(http.ListenAndServe(":8080", r))
 }
 
+// ErrorResponse returns errors to the frontend
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-func withError(next func(w http.ResponseWriter, r *http.Request) (int, error)) http.HandlerFunc {
+func withErrorAndDB(db *DB, next func(db *DB, w http.ResponseWriter, r *http.Request) (int, error)) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		code, err := next(w, r)
+		code, err := next(db, w, r)
 		if err != nil {
 			log.Println(err)
 			resp, err := json.Marshal(&ErrorResponse{
@@ -77,13 +65,4 @@ func withError(next func(w http.ResponseWriter, r *http.Request) (int, error)) h
 	}
 
 	return http.HandlerFunc(fn)
-}
-
-func db() {
-	db, err := sqlx.Connect("postgres", "user=dev dbname=superhip password=dev sslmode=disable")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	conn = db
 }

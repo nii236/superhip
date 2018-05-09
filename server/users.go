@@ -4,66 +4,48 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/antonholmquist/jason"
 
 	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/lib/pq"
-	uuid "github.com/satori/go.uuid"
+	"github.com/nii236/superhip/server/models"
 
 	"github.com/go-chi/chi"
 )
 
-func userRouter() http.Handler {
+func userRouter(db *DB) http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/get/list", withError(usersGetList))
-	r.Post("/get", withError(usersGetOne))
-	r.Post("/get/many", withError(usersGetMany))
-	r.Post("/get/many/reference", withError(usersGetManyReference))
+	r.Post("/get/list", withErrorAndDB(db, usersGetList))
+	r.Post("/get", withErrorAndDB(db, usersGetOne))
+	r.Post("/get/many", withErrorAndDB(db, usersGetMany))
+	r.Post("/get/many/reference", withErrorAndDB(db, usersGetManyReference))
 
-	r.Post("/create", withError(usersCreate))
+	r.Post("/create", withErrorAndDB(db, usersCreate))
 
-	r.Post("/update", withError(usersUpdate))
-	r.Post("/update/many", withError(usersUpdateMany))
+	r.Post("/update", withErrorAndDB(db, usersUpdate))
+	r.Post("/update/many", withErrorAndDB(db, usersUpdateMany))
 
-	r.Post("/delete", withError(usersDelete))
-	r.Post("/delete/many", withError(usersDeleteMany))
+	r.Post("/delete", withErrorAndDB(db, usersDelete))
+	r.Post("/delete/many", withErrorAndDB(db, usersDeleteMany))
 
 	return r
 }
 
-// User is the user model
-type User struct {
-	ID           uuid.UUID `db:"id" json:"id,omitempty"`
-	Email        string    `db:"email" json:"email,omitempty"`
-	FirstName    string    `db:"first_name" json:"first_name,omitempty"`
-	LastName     string    `db:"last_name" json:"last_name,omitempty"`
-	Password     string    `json:"-"`
-	PasswordHash string    `json:"-" db:"password_hash"`
-	Role         string    `db:"role" json:"role,omitempty"`
-}
-
-func mustMarshal(v interface{}) []byte {
-	b, err := json.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
-func usersGetList(w http.ResponseWriter, r *http.Request) (int, error) {
+func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &GetListRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		return 500, err
-	}
+	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
 
-	result := []*User{}
-	err = conn.Select(&result, userQueries["all"])
+	result := models.UserList{}
+
+	err := db.List(&result)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
@@ -75,31 +57,23 @@ func usersGetList(w http.ResponseWriter, r *http.Request) (int, error) {
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}
-
-	err = json.NewEncoder(w).Encode(resp)
-
-	if err != nil {
-		return 500, err
-	}
+	w.Write(mustMarshal(resp))
 	return 200, nil
 }
 
-func usersGetOne(w http.ResponseWriter, r *http.Request) (int, error) {
+func usersGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &GetOneRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		return 500, err
-	}
+	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
 
-	result := &User{}
-	log.Println("ID", req.ID)
-	err = conn.Get(result, userQueries["get"], req.ID)
+	result := &models.User{}
+
+	err := db.Read(result, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
 		resp := &Response{
 			Total:   0,
-			Data:    mustMarshal([]*User{}),
+			Data:    mustMarshal(models.UserList{}),
 			Message: err.Error(),
 		}
 		err = json.NewEncoder(w).Encode(resp)
@@ -108,56 +82,52 @@ func usersGetOne(w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, err
 	}
-	resp := &Response{
+
+	w.Write(mustMarshal(&Response{
 		Total: 1,
-		Data:  mustMarshal([]*User{result}),
-	}
-
-	err = json.NewEncoder(w).Encode(resp)
-
-	if err != nil {
-		return 500, err
-	}
+		Data:  mustMarshal(models.UserList{result}),
+	}))
 	return 200, nil
 }
 
-func usersGetMany(w http.ResponseWriter, r *http.Request) (int, error) {
-	id := chi.URLParam(r, "id")
-	result := []*User{}
-	err := conn.Select(result, userQueries["get"], id)
+func usersGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &GetManyRequest{}
+	mustDecode(r.Body, req)
+
+	defer r.Body.Close()
+
+	result := models.UserList{}
+
+	IDs := []string{}
+	for _, v := range req.IDs {
+		IDs = append(IDs, v.String())
+	}
+
+	err := db.GetMany(&result, IDs)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-	resp := &Response{
+
+	w.Write(mustMarshal(&Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
-	}
-
-	err = json.NewEncoder(w).Encode(resp)
-
-	if err != nil {
-		return 500, err
-	}
+	}))
 
 	return 200, nil
 }
 
-func usersGetManyReference(w http.ResponseWriter, r *http.Request) (int, error) {
-	return 200, nil
-}
+func usersGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &GetManyReferenceRequest{}
+	mustDecode(r.Body, req)
 
-func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &UpdateRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		return 500, err
-	}
+	defer r.Body.Close()
 
-	existing := &User{}
-	err = conn.Get(existing, userQueries["get"], req.ID)
+	result := models.UserList{}
+
+	err := db.Reference(&result, req.Target, req.Column, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
@@ -165,22 +135,71 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	existing.FirstName = req.Data["first_name"]
-	existing.LastName = req.Data["last_name"]
-	existing.Email = req.Data["email"]
-	existing.Role = req.Data["role"]
+	w.Write(mustMarshal(&Response{
+		Total: len(result),
+		Data:  mustMarshal(result),
+	}))
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Data["password"]), bcrypt.DefaultCost)
+	return 200, nil
+}
+
+func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &UpdateRequest{}
+	mustDecode(r.Body, req)
+
+	defer r.Body.Close()
+
+	existing := &models.User{}
+	err := db.Read(existing, req.ID.String())
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
+		return 500, err
+	}
+
+	obj, err := jason.NewObjectFromBytes(req.Data)
 	if err != nil {
 		return 500, err
 	}
+
+	existing.FirstName, err = obj.GetString("first_name")
+	if err != nil {
+		return 500, fmt.Errorf("first_name: %s", err)
+	}
+	existing.LastName, err = obj.GetString("last_name")
+	if err != nil {
+		return 500, fmt.Errorf("last_name: %s", err)
+	}
+	existing.Email, err = obj.GetString("email")
+	if err != nil {
+		return 500, fmt.Errorf("email: %s", err)
+	}
+	existing.Role, err = obj.GetString("role")
+	if err != nil {
+		return 500, fmt.Errorf("role: %s", err)
+	}
+	if err != nil {
+		return 500, err
+	}
+	password, err := obj.GetString("password")
+	if err != nil {
+		return 500, fmt.Errorf("password: %s", err)
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return 500, err
+	}
+
 	hashedB64 := base64.StdEncoding.EncodeToString(hashed)
 	if hashedB64 != existing.PasswordHash {
 		existing.PasswordHash = hashedB64
 	}
 
-	log.Printf("%+v", existing)
-	rows, err := conn.NamedQuery(userQueries["update"], existing)
+	updated := &models.User{}
+	fmt.Printf("%+v\n", existing)
+	err = db.Update(updated, existing, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
@@ -188,137 +207,129 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	updated := &User{}
-
-	for rows.Next() {
-		err = rows.StructScan(updated)
-		if err != nil {
-			return 500, err
-		}
-	}
-
-	json.NewEncoder(w).Encode(&Response{
+	w.Write(mustMarshal(&Response{
 		Total: 1,
-		Data:  mustMarshal([]*User{updated}),
-	})
+		Data:  mustMarshal([]*models.User{updated}),
+	}))
 
 	return 200, nil
 }
 
-func usersUpdateMany(w http.ResponseWriter, r *http.Request) (int, error) {
+func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &UpdateManyRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
+	mustDecode(r.Body, req)
+
+	defer r.Body.Close()
+
+	obj, err := jason.NewObjectFromBytes(req.Data)
 	if err != nil {
 		return 500, err
 	}
-	updatedUsers := []*User{}
-	for _, id := range req.IDs {
-		existing := &User{}
-		err = conn.Get(existing, userQueries["get"], id)
-		if err != nil && err == sql.ErrNoRows {
-			return 404, err
-		}
-		if err != nil && err != sql.ErrNoRows {
-			return 500, err
-		}
-
-		existing.FirstName = req.Data["first_name"]
-		existing.LastName = req.Data["last_name"]
-		existing.Email = req.Data["email"]
-		existing.Role = req.Data["role"]
-
-		hashed, err := bcrypt.GenerateFromPassword([]byte(req.Data["password"]), bcrypt.DefaultCost)
-		if err != nil {
-			return 500, err
-		}
-		hashedB64 := base64.StdEncoding.EncodeToString(hashed)
-		if hashedB64 != existing.PasswordHash {
-			existing.PasswordHash = hashedB64
-		}
-
-		log.Printf("%+v", existing)
-		rows, err := conn.NamedQuery(userQueries["update"], existing)
-		if err != nil {
-			return 500, err
-		}
-
-		updated := &User{}
-
-		for rows.Next() {
-			err = rows.StructScan(updated)
-			if err != nil {
-				return 500, err
-			}
-		}
-
-		updatedUsers = append(updatedUsers, updated)
-
+	updateTo := &models.User{}
+	updateTo.FirstName, err = obj.GetString("first_name")
+	if err != nil {
+		return 500, fmt.Errorf("first_name: %s", err)
+	}
+	updateTo.LastName, err = obj.GetString("last_name")
+	if err != nil {
+		return 500, fmt.Errorf("last_name: %s", err)
+	}
+	updateTo.Email, err = obj.GetString("email")
+	if err != nil {
+		return 500, fmt.Errorf("email: %s", err)
+	}
+	updateTo.Role, err = obj.GetString("role")
+	if err != nil {
+		return 500, fmt.Errorf("role: %s", err)
+	}
+	if err != nil {
+		return 500, err
 	}
 
-	json.NewEncoder(w).Encode(&Response{
-		Total: len(updatedUsers),
-		Data:  mustMarshal(updatedUsers),
-	})
+	password, err := obj.GetString("password")
+	if err != nil {
+		return 500, fmt.Errorf("password: %s", err)
+	}
 
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return 500, err
+	}
+
+	hashedB64 := base64.StdEncoding.EncodeToString(hashed)
+	updateTo.PasswordHash = hashedB64
+
+	IDs := []string{}
+	for _, v := range req.IDs {
+		IDs = append(IDs, v.String())
+	}
+
+	updated := models.UserList{}
+
+	fmt.Println(updateTo)
+	err = db.UpdateMany(&updated, updateTo, IDs)
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
+		return 500, err
+	}
+
+	w.Write(mustMarshal(&Response{
+		Total: len(updated),
+		Data:  mustMarshal(updated),
+	}))
 	return 200, nil
 }
 
-func usersCreate(w http.ResponseWriter, r *http.Request) (int, error) {
+func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		return 500, err
 	}
-	log.Println(req.Data)
-	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Data["password"]), bcrypt.DefaultCost)
-	if err != nil {
-		return 500, err
-	}
-
-	user := &User{
-		FirstName:    req.Data["first_name"],
-		LastName:     req.Data["last_name"],
-		Email:        req.Data["email"],
-		PasswordHash: base64.StdEncoding.EncodeToString(hashed),
-		Role:         "teacher",
-	}
-
-	log.Printf("%+v", user)
-	rows, err := conn.NamedQuery(userQueries["create"], user)
-	if err != nil && err == sql.ErrNoRows {
-		return 404, err
-	}
-	if err != nil && err != sql.ErrNoRows {
-		return 500, err
-	}
-
-	created := &User{}
-
-	for rows.Next() {
-		err = rows.StructScan(created)
-		if err != nil {
-			return 500, err
-		}
-	}
-
-	json.NewEncoder(w).Encode(&Response{
-		Total: 1,
-		Data:  mustMarshal([]*User{created}),
-	})
 
 	defer r.Body.Close()
 
-	return 200, nil
-}
-
-func usersDelete(w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
+	obj, err := jason.NewObjectFromBytes(req.Data)
 	if err != nil {
 		return 500, err
 	}
-	deleted := &User{}
-	err = conn.Get(deleted, userQueries["archive"], req.ID)
+	createWith := &models.User{}
+	createWith.FirstName, err = obj.GetString("first_name")
+	if err != nil {
+		return 500, fmt.Errorf("first_name: %s", err)
+	}
+	createWith.LastName, err = obj.GetString("last_name")
+	if err != nil {
+		return 500, fmt.Errorf("last_name: %s", err)
+	}
+	createWith.Email, err = obj.GetString("email")
+	if err != nil {
+		return 500, fmt.Errorf("email: %s", err)
+	}
+	createWith.Role, err = obj.GetString("role")
+	if err != nil {
+		return 500, fmt.Errorf("role: %s", err)
+	}
+	if err != nil {
+		return 500, err
+	}
+
+	password, err := obj.GetString("password")
+	if err != nil {
+		return 500, fmt.Errorf("password: %s", err)
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return 500, err
+	}
+	hashedB64 := base64.StdEncoding.EncodeToString(hashed)
+	createWith.PasswordHash = hashedB64
+
+	created := &models.User{}
+	log.Printf("%+v", createWith)
+	err = db.Create(created, createWith)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
@@ -326,35 +337,68 @@ func usersDelete(w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	json.NewEncoder(w).Encode(&Response{
+	w.Write(mustMarshal(&Response{
 		Total: 1,
-		Data:  mustMarshal([]*User{deleted}),
-	})
+		Data:  mustMarshal(models.UserList{created}),
+	}))
+
 	return 200, nil
 }
 
-func usersDeleteMany(w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteManyRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
+func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &DeleteRequest{}
+	mustDecode(r.Body, req)
+
+	defer r.Body.Close()
+
+	result := &models.User{}
+
+	err := db.Delete(result, req.ID.String())
+	if err != nil && err == sql.ErrNoRows {
+		resp := &Response{
+			Total:   0,
+			Data:    mustMarshal(models.UserList{}),
+			Message: err.Error(),
+		}
+		err = json.NewEncoder(w).Encode(resp)
+		return 200, err
+	}
 	if err != nil {
 		return 500, err
 	}
 
-	deleted := []*User{}
-	for _, id := range req.IDs {
-		user := &User{}
-		err = conn.Get(user, userQueries["archive"], id)
-		if err != nil && err == sql.ErrNoRows {
-			return 404, err
-		}
-		if err != nil && err != sql.ErrNoRows {
-			return 500, err
-		}
-		deleted = append(deleted, user)
-	}
-	json.NewEncoder(w).Encode(&Response{
+	w.Write(mustMarshal(&Response{
 		Total: 1,
-		Data:  mustMarshal(deleted),
-	})
+		Data:  mustMarshal(models.UserList{result}),
+	}))
+	return 200, nil
+}
+
+func usersDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &DeleteManyRequest{}
+	mustDecode(r.Body, req)
+
+	defer r.Body.Close()
+
+	result := models.UserList{}
+
+	IDs := []string{}
+	for _, v := range req.IDs {
+		IDs = append(IDs, v.String())
+	}
+
+	err := db.DeleteMany(&result, IDs)
+	if err != nil && err == sql.ErrNoRows {
+		return 404, err
+	}
+	if err != nil && err != sql.ErrNoRows {
+		return 500, err
+	}
+
+	w.Write(mustMarshal(&Response{
+		Total: len(result),
+		Data:  mustMarshal(result),
+	}))
+
 	return 200, nil
 }
