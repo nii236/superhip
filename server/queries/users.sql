@@ -7,7 +7,7 @@ AND id = ANY($1);
 -- name: updatemany
 UPDATE users 
 SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
-WHERE id = $6
+WHERE id = ANY($6)
 RETURNING *;
 
 -- name: deletemany

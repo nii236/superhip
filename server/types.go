@@ -42,7 +42,7 @@ type GetManyReferenceRequest struct {
 		Order string `json:"order,omitempty"`
 	} `json:"sort,omitempty"`
 	Filter json.RawMessage `json:"filter,omitempty"`
-	Column string          `json:"column,omitempty`
+	Column string          `json:"column,omitempty"`
 }
 
 // UpdateRequest is the JSON request that comes in for the userUpdate handler

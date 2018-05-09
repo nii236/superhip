@@ -1,5 +1,6 @@
 import React from "react"
 import {
+	ReferenceField,
 	Edit,
 	SimpleForm,
 	DisabledInput,
@@ -28,11 +29,25 @@ const ListFactory = (fields: IList<string>) => {
 	}
 }
 
+const UsersList = props => {
+	return (
+		<List {...props}>
+			<Datagrid>
+				<TextField source="first_name" />
+				<TextField source="last_name" />
+				<TextField source="email" />
+				<TextField source="role" />
+				<EditButton />
+			</Datagrid>
+		</List>
+	)
+}
+
 const UserTitle = ({ record }) => {
 	return <span>User {record.first_name ? `"${record.first_name}"` : ""}</span>
 }
 
-export const UserEdit = props => {
+const UserEdit = props => {
 	return (
 		<Edit title={<UserTitle />} {...props}>
 			<SimpleForm>
@@ -46,7 +61,7 @@ export const UserEdit = props => {
 	)
 }
 
-export const UserCreate = props => (
+const UserCreate = props => (
 	<Create title={<UserTitle />} {...props}>
 		<SimpleForm>
 			<TextInput source="first_name" />
@@ -54,6 +69,48 @@ export const UserCreate = props => (
 			<TextInput source="email" />
 			<TextInput source="role" />
 			<TextInput source="password" />
+		</SimpleForm>
+	</Create>
+)
+
+const TeamsList = props => {
+	return (
+		<List {...props}>
+			<Datagrid>
+				<TextField source="name" />
+				<ReferenceField label="User" source="user_id" reference="users">
+					<TextField source="first_name" />
+				</ReferenceField>
+				<EditButton />
+			</Datagrid>
+		</List>
+	)
+}
+
+const TeamTitle = ({ record }) => {
+	return <span>Team {record.name ? `"${record.name}"` : ""}</span>
+}
+
+const TeamEdit = props => {
+	return (
+		<Edit title={<TeamTitle />} {...props}>
+			<SimpleForm>
+				<TextInput source="name" />
+				<ReferenceInput label="User" source="user_id" reference="users">
+					<SelectInput optionText="first_name" />
+				</ReferenceInput>
+			</SimpleForm>
+		</Edit>
+	)
+}
+
+const TeamCreate = props => (
+	<Create title={<TeamTitle />} {...props}>
+		<SimpleForm>
+			<TextInput source="name" />
+			<ReferenceInput label="User" source="user_id" reference="users">
+				<SelectInput optionText="first_name" />
+			</ReferenceInput>
 		</SimpleForm>
 	</Create>
 )
@@ -74,18 +131,10 @@ const ResourceList = props => {
 
 const dataProvider = data.Provider("http://localhost:8080")
 const App = props => {
-	const UsersList = ListFactory(IList(["first_name", "last_name", "email", "role"]))
-
-	const SitesList = ListFactory(IList(["id", "name"]))
-
-	const ModelsList = ListFactory(IList(["id", "name"]))
-
-	const ModelGroupsList = ListFactory(IList(["id", "name"]))
-
-	const SnapshotsList = ListFactory(IList(["id", "name"]))
 	return (
 		<Admin dataProvider={dataProvider} authProvider={auth.Provider}>
-			<Resource edit={UserEdit} create={UserCreate} name="users" list={props => <UsersList {...props} />} />
+			<Resource edit={UserEdit} create={UserCreate} name="users" list={UsersList} />
+			<Resource edit={TeamEdit} create={TeamCreate} name="teams" list={TeamsList} />
 		</Admin>
 	)
 }

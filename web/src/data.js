@@ -80,6 +80,10 @@ const Provider = (apiUrl, httpClient = fetchJson) => {
 	 * @returns {Object} REST response
 	 */
 	const convertHTTPResponseToREST = (response, type, resource, params) => {
+		console.log("response", response)
+		console.log("type", type)
+		console.log("resource", resource)
+		console.log("params", params)
 		const { headers, json } = response
 		switch (type) {
 			case GET_LIST:
@@ -102,9 +106,6 @@ const Provider = (apiUrl, httpClient = fetchJson) => {
 	 * @returns {Promise} the Promise for a REST response
 	 */
 	return (type, resource, params) => {
-		console.log("type", type)
-		console.log("resource", resource)
-		console.log("params", params)
 		const { url, options } = convertRESTRequestToHTTP(type, resource, params)
 		return httpClient(url, options).then(response => convertHTTPResponseToREST(response, type, resource, params))
 	}

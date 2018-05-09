@@ -38,6 +38,7 @@ func main() {
 
 	r.Mount("/auth", authRouter(db))
 	r.Mount("/users", userRouter(db))
+	r.Mount("/teams", teamRouter(db))
 
 	log.Println("Starting on :8080")
 	log.Fatalln(http.ListenAndServe(":8080", r))

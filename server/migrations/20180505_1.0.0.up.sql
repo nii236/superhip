@@ -20,11 +20,14 @@ CREATE TABLE schools (
 	name TEXT NOT NULL
 );
 
-
 CREATE TABLE teams (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	user_id UUID NOT NULL REFERENCES users(id),
 	name TEXT NOT NULL,
-	user_id UUID NOT NULL REFERENCES users(id)
+	metadata jsonb NOT NULL DEFAULT '{}',
+	archived boolean NOT NULL DEFAULT false,
+	archived_on timestamp,
+	created_at timestamp NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE students (
