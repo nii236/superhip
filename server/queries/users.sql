@@ -1,34 +1,54 @@
--- name: getmanyreference
+-- name: getmany
 SELECT *
-FROM $1
-WHERE archived=false
-AND user_id = $2
+FROM users 
+WHERE archived = false
+AND id = ANY($1);
 
--- name: all
+-- name: updatemany
+UPDATE users 
+SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
+WHERE id = ANY($6)
+RETURNING *;
+
+-- name: deletemany
+UPDATE users 
+SET archived = true
+WHERE id = ANY($1)
+RETURNING *;
+
+-- name: reference
+SELECT users.*
+FROM users 
+INNER JOIN "%s" on "%s".id = users."%s"
+WHERE users.archived = false
+AND "%s".id = $1;
+
+-- name: list
 SELECT id, first_name, last_name, email, role
 FROM users
-WHERE archived=false
+WHERE archived=false;
 
 -- name: create
 INSERT INTO users (first_name, last_name, email, password_hash, role)
-VALUES (:first_name, :last_name, :email, :password_hash, :role)
-RETURNING id, first_name, last_name, email, password_hash, role
+VALUES ($1,$2,$3,$4,$5)
+RETURNING *;
 
--- name: archive
-UPDATE users SET (archived, archived_on)
-= (true, NOW())
-WHERE id = $1
-RETURNING id, first_name, last_name, email, password_hash, role
-
--- name: get
-SELECT id, first_name, last_name, email, role
+-- name: read
+SELECT *
 FROM users
 WHERE id=$1
-AND archived=false
+AND archived=false;
 
 -- name: update
-UPDATE users SET (first_name, last_name, email, password_hash, role)
-= (:first_name, :last_name, :email, :password_hash, :role)
-WHERE id = :id
+UPDATE users 
+SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
+WHERE id = $6
 AND archived=false
-RETURNING id, first_name, last_name, email, password_hash, role
+RETURNING *;
+
+-- name: delete
+UPDATE users 
+SET (archived, archived_on) = (true, NOW())
+WHERE id = $1
+RETURNING *;
+

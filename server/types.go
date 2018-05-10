@@ -16,7 +16,7 @@ type GetListRequest struct {
 		Field string `json:"field,omitempty"`
 		Order string `json:"order,omitempty"`
 	} `json:"sort,omitempty"`
-	Filter map[string]interface{} `json:"filter,omitempty"`
+	Filter json.RawMessage `json:"filter,omitempty"`
 }
 
 // GetOneRequest is the JSON request that comes in for the userGetOne handler
@@ -41,31 +41,32 @@ type GetManyReferenceRequest struct {
 		Field string `json:"field,omitempty"`
 		Order string `json:"order,omitempty"`
 	} `json:"sort,omitempty"`
-	Filter map[string]interface{} `json:"filter,omitempty"`
+	Filter json.RawMessage `json:"filter,omitempty"`
+	Column string          `json:"column,omitempty"`
 }
 
 // UpdateRequest is the JSON request that comes in for the userUpdate handler
 type UpdateRequest struct {
-	ID           uuid.UUID         `json:"id,omitempty"`
-	Data         map[string]string `json:"data,omitempty"`
-	PreviousData map[string]string `json:"previous_data,omitempty"`
+	ID           uuid.UUID       `json:"id,omitempty"`
+	Data         json.RawMessage `json:"data,omitempty"`
+	PreviousData json.RawMessage `json:"previous_data,omitempty"`
 }
 
 // UpdateManyRequest is the JSON request that comes in for the userUpdateMany handler
 type UpdateManyRequest struct {
-	IDs  []uuid.UUID
-	Data map[string]string
+	IDs  []*uuid.UUID    `json:"ids,omitempty"`
+	Data json.RawMessage `json:"data,omitempty"`
 }
 
 // CreateRequest is the JSON request that comes in for the userCreate handler
 type CreateRequest struct {
-	Data map[string]string `json:"data,omitempty"`
+	Data json.RawMessage `json:"data,omitempty"`
 }
 
 // DeleteRequest is the JSON request that comes in for the userDelete handler
 type DeleteRequest struct {
-	ID           uuid.UUID              `json:"id,omitempty"`
-	PreviousData map[string]interface{} `json:"previous_data,omitempty"`
+	ID           uuid.UUID       `json:"id,omitempty"`
+	PreviousData json.RawMessage `json:"previous_data,omitempty"`
 }
 
 // DeleteManyRequest is the JSON request that comes in for the userDeleteMany handler

@@ -60,3 +60,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
+
+[[constraint]]
+  name = "github.com/antonholmquist/jason"
+  version = "1.0.0"

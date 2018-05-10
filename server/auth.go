@@ -14,19 +14,19 @@ type SignupRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
-func authRouter() http.Handler {
+func authRouter(db *DB) http.Handler {
 	r := chi.NewRouter()
-	r.Post("/users", withError(users))
-	r.Post("/refresh_token", withError(refreshToken))
-	r.Post("/change_password", withError(changePassword))
-	r.Post("/change_email", withError(changeEmail))
-	r.Post("/forgot_password", withError(forgotPassword))
-	r.Post("/forgot_username", withError(forgotUsername))
-	r.Post("/check", withError(check))
+	r.Post("/users", withErrorAndDB(db, users))
+	r.Post("/refresh_token", withErrorAndDB(db, refreshToken))
+	r.Post("/change_password", withErrorAndDB(db, changePassword))
+	r.Post("/change_email", withErrorAndDB(db, changeEmail))
+	r.Post("/forgot_password", withErrorAndDB(db, forgotPassword))
+	r.Post("/forgot_username", withErrorAndDB(db, forgotUsername))
+	r.Post("/check", withErrorAndDB(db, check))
 	return r
 }
 
-func users(w http.ResponseWriter, r *http.Request) (int, error) {
+func users(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	// signup
 	// req := &SignupRequest{}
 	// err := json.NewDecoder(r.Body).Decode(req)
@@ -69,7 +69,7 @@ type SigninRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
-func refreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
+func refreshToken(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	// signin
 	// req := &SigninRequest{}
 	// err := json.NewDecoder(r.Body).Decode(req)
@@ -95,7 +95,7 @@ func refreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
 
-func check(w http.ResponseWriter, r *http.Request) (int, error) {
+func check(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	// b, err := ioutil.ReadAll(r.Body)
 	// if err != nil {
 	// 	return 500, err
@@ -116,16 +116,16 @@ func check(w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
 
-func changePassword(w http.ResponseWriter, r *http.Request) (int, error) {
+func changePassword(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
-func changeEmail(w http.ResponseWriter, r *http.Request) (int, error) {
+func changeEmail(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
-func forgotPassword(w http.ResponseWriter, r *http.Request) (int, error) {
+func forgotPassword(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
-func forgotUsername(w http.ResponseWriter, r *http.Request) (int, error) {
+func forgotUsername(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	return 200, nil
 }
 

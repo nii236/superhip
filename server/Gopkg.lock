@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/antonholmquist/jason"
+  packages = ["."]
+  revision = "c23cef7eaa75a6a5b8810120e167bd590d8fd2ab"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
@@ -27,7 +33,8 @@
   name = "github.com/jmoiron/sqlx"
   packages = [
     ".",
-    "reflectx"
+    "reflectx",
+    "types"
   ]
   revision = "2aeb6a910c2b94f2d5eb53d9895d80e27264ec41"
 
@@ -59,11 +66,11 @@
     "bcrypt",
     "blowfish"
   ]
-  revision = "4ec37c66abab2c7e02ae775328b2ff001c3f025a"
+  revision = "21052ae46654ecf18dfdba0f7c12701a1e2b3164"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df7d1115ca1abcf9e76e5d792dcb183bb5e0582f75c7cf27adadb69ddc8f51ef"
+  inputs-digest = "f4dbce36611975df3324c99f160f80c1064b68fc89f127a6fc14072eb58283fe"
   solver-name = "gps-cdcl"
   solver-version = 1
