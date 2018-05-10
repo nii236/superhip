@@ -6,7 +6,7 @@ AND id = ANY($1);
 
 -- name: updatemany
 UPDATE students 
-SET (team_id, name) = ($1, $2)
+SET (school_id, name) = ($1, $2)
 WHERE id = ANY($3)
 RETURNING *;
 
@@ -29,7 +29,7 @@ FROM students
 WHERE archived=false;
 
 -- name: create
-INSERT INTO students (team_id, name)
+INSERT INTO students (school_id, name)
 VALUES ($1,$2)
 RETURNING *;
 
@@ -41,7 +41,7 @@ AND archived=false;
 
 -- name: update
 UPDATE students 
-SET (team_id, name) = ($1, $2)
+SET (school_id, name) = ($1, $2)
 WHERE id = $3
 AND archived=false
 RETURNING *;

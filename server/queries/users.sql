@@ -6,8 +6,8 @@ AND id = ANY($1);
 
 -- name: updatemany
 UPDATE users 
-SET (school_id, first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5,$6)
-WHERE id = ANY($7)
+SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
+WHERE id = ANY($6)
 RETURNING *;
 
 -- name: deletemany
@@ -24,13 +24,21 @@ WHERE users.archived = false
 AND "%s".id = $1;
 
 -- name: list
-SELECT *
+SELECT 
+users.*,
+COALESCE(array_agg(schools.id), '{}'::UUID[])AS school_ids
 FROM users
-WHERE archived=false;
+LEFT JOIN schools_users ON schools_users.user_id = users.id
+LEFT JOIN schools ON schools_users.school_id = schools.id
+WHERE users.archived=false
+GROUP BY users.id
+
+
+
 
 -- name: create
-INSERT INTO users (school_id, first_name, last_name, email, password_hash, role)
-VALUES ($1,$2,$3,$4,$5,$6)
+INSERT INTO users (first_name, last_name, email, password_hash, role)
+VALUES ($1,$2,$3,$4,$5)
 RETURNING *;
 
 -- name: read
@@ -41,8 +49,8 @@ AND archived=false;
 
 -- name: update
 UPDATE users 
-SET (school_id, first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5,$6)
-WHERE id = $7
+SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
+WHERE id = $6
 AND archived=false
 RETURNING *;
 

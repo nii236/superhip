@@ -16,4 +16,5 @@ type Collectioner interface {
 	GetMany(collection Collection, IDs []string) error
 	UpdateMany(collection Collection, item Item, IDs []string) error
 	DeleteMany(collection Collection, IDs []string) error
+	MakeJoin(table string, col1 string, col2 string, fk1 string, fk2 string) error
 }

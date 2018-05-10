@@ -10,7 +10,7 @@ import (
 // Student is the user model
 type Student struct {
 	ID         uuid.UUID      `json:"id,omitempty" db:"id"`
-	TeamID     uuid.UUID      `json:"team_id,omitempty" db:"team_id"`
+	SchoolID   uuid.UUID      `json:"school_id,omitempty" db:"school_id"`
 	Name       string         `json:"name,omitempty" db:"name"`
 	Metadata   types.JSONText `json:"metadata,omitempty" db:"metadata"`
 	Archived   bool           `json:"archived,omitempty" db:"archived"`
@@ -21,7 +21,7 @@ type Student struct {
 // CreateParams implements the Cruddable interface
 func (t *Student) CreateParams() []interface{} {
 	return []interface{}{
-		&t.TeamID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }
@@ -44,7 +44,7 @@ func (t *Student) ReadQuery() string {
 // UpdateManyParams implements the Cruddable interface
 func (t *Student) UpdateManyParams() []interface{} {
 	return []interface{}{
-		&t.TeamID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }
@@ -52,7 +52,7 @@ func (t *Student) UpdateManyParams() []interface{} {
 // UpdateParams implements the Cruddable interface
 func (t *Student) UpdateParams() []interface{} {
 	return []interface{}{
-		&t.TeamID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }

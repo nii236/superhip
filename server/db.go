@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -27,6 +29,27 @@ func newDB() (*DB, error) {
 // List implements the Collectioner interface
 func (db *DB) List(collection Collection) error {
 	return db.conn.Select(collection, collection.ListQuery())
+}
+
+// MakeJoin creates a join
+func (db *DB) MakeJoin(table string, col1 string, col2 string, fk1 string, fk2 string) error {
+	isAlpha := regexp.MustCompile(`^[A-Za-z_]+$`).MatchString
+	if !isAlpha(table) {
+		panic("non alphanumeric string provided: table: " + table)
+	}
+	if !isAlpha(col1) {
+		panic("non alphanumeric string provided: col1: " + col1)
+	}
+	if !isAlpha(col2) {
+		panic("non alphanumeric string provided: col2: " + col2)
+	}
+
+	q := fmt.Sprintf(`INSERT INTO "%s" ("%s", "%s") VALUES ($1, $2)`, table, col1, col2)
+	_, err := db.conn.Exec(q, fk1, fk2)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateMany implements the Collectioner interface

@@ -166,11 +166,11 @@ func teamsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, fmt.Errorf("name: %s", err)
 	}
-	userFK, err := obj.GetString("user_id")
+	schoolFK, err := obj.GetString("school_id")
 	if err != nil {
-		return 500, fmt.Errorf("user_id: %s", err)
+		return 500, fmt.Errorf("school_id: %s", err)
 	}
-	existing.UserID, err = uuid.FromString(userFK)
+	existing.SchoolID, err = uuid.FromString(schoolFK)
 	if err != nil {
 		return 500, err
 	}
@@ -209,11 +209,11 @@ func teamsUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	if err != nil {
 		return 500, fmt.Errorf("name: %s", err)
 	}
-	userFK, err := obj.GetString("user_id")
+	schoolFK, err := obj.GetString("school_id")
 	if err != nil {
-		return 500, fmt.Errorf("user_id: %s", err)
+		return 500, fmt.Errorf("school_id: %s", err)
 	}
-	updateTo.UserID, err = uuid.FromString(userFK)
+	updateTo.SchoolID, err = uuid.FromString(schoolFK)
 	if err != nil {
 		return 500, err
 	}
@@ -259,12 +259,12 @@ func teamsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, fmt.Errorf("name: %s", err)
 	}
-	userFK, err := obj.GetString("user_id")
+	schoolFK, err := obj.GetString("school_id")
 	if err != nil {
 		fmt.Printf("%+v", string(req.Data))
-		return 500, fmt.Errorf("user_id: %s", err)
+		return 500, fmt.Errorf("school_id: %s", err)
 	}
-	createWith.UserID, err = uuid.FromString(userFK)
+	createWith.SchoolID, err = uuid.FromString(schoolFK)
 	if err != nil {
 		return 500, err
 	}

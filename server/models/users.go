@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/jmoiron/sqlx/types"
 	uuid "github.com/satori/go.uuid"
 )
@@ -11,7 +13,7 @@ import (
 // User is the user model
 type User struct {
 	ID                 uuid.UUID      `json:"id,omitempty" db:"id"`
-	SchoolID           uuid.UUID      `json:"school_id,omitempty" db:"school_id"`
+	SchoolIDs          UUIDArray      `json:"school_ids,omitempty" db:"school_ids"`
 	Email              string         `json:"email,omitempty" db:"email"`
 	FirstName          string         `json:"first_name,omitempty" db:"first_name"`
 	LastName           string         `json:"last_name,omitempty" db:"last_name"`
@@ -24,10 +26,22 @@ type User struct {
 	CreatedAt          time.Time      `json:"created_at,omitempty" db:"created_at"`
 }
 
+type UUIDArray struct {
+	UUIDs []uuid.UUID
+	// Valid bool
+}
+
+func (n *UUIDArray) Scan(value interface{}) error {
+	if value == nil {
+		n.UUIDs = []uuid.UUID{}
+		return nil
+	}
+	return pq.Array(&n.UUIDs).Scan(value)
+}
+
 // CreateParams implements the Cruddable interface
 func (u *User) CreateParams() []interface{} {
 	return []interface{}{
-		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
@@ -54,7 +68,6 @@ func (u *User) ReadQuery() string {
 // UpdateManyParams implements the Cruddable interface
 func (u *User) UpdateManyParams() []interface{} {
 	return []interface{}{
-		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
@@ -67,7 +80,6 @@ func (u *User) UpdateManyParams() []interface{} {
 func (u *User) UpdateParams() []interface{} {
 	fmt.Printf("%+v", u)
 	return []interface{}{
-		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,

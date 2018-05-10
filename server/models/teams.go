@@ -10,7 +10,7 @@ import (
 // Team is the user model
 type Team struct {
 	ID         uuid.UUID      `json:"id,omitempty" db:"id"`
-	UserID     uuid.UUID      `json:"user_id,omitempty" db:"user_id"`
+	SchoolID   uuid.UUID      `json:"school_id,omitempty" db:"school_id"`
 	Name       string         `json:"name,omitempty" db:"name"`
 	Metadata   types.JSONText `json:"metadata,omitempty" db:"metadata"`
 	Archived   bool           `json:"archived,omitempty" db:"archived"`
@@ -21,7 +21,7 @@ type Team struct {
 // CreateParams implements the Cruddable interface
 func (t *Team) CreateParams() []interface{} {
 	return []interface{}{
-		&t.UserID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }
@@ -44,7 +44,7 @@ func (t *Team) ReadQuery() string {
 // UpdateManyParams implements the Cruddable interface
 func (t *Team) UpdateManyParams() []interface{} {
 	return []interface{}{
-		&t.UserID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }
@@ -52,7 +52,7 @@ func (t *Team) UpdateManyParams() []interface{} {
 // UpdateParams implements the Cruddable interface
 func (t *Team) UpdateParams() []interface{} {
 	return []interface{}{
-		&t.UserID,
+		&t.SchoolID,
 		&t.Name,
 	}
 }

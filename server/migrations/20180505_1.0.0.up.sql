@@ -11,7 +11,6 @@ CREATE TABLE schools (
 
 CREATE TABLE users (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-	school_id UUID NOT NULL REFERENCES schools(id),
 	first_name text NOT NULL,
 	last_name text NOT NULL,
 	email text NOT NULL,
@@ -25,9 +24,14 @@ CREATE TABLE users (
 	CONSTRAINT users_email_key UNIQUE (email)
 );
 
+CREATE TABLE schools_users (
+	school_id UUID NOT NULL REFERENCES schools(id),
+	user_id UUID NOT NULL REFERENCES users(id)
+);
+
 CREATE TABLE teams (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-	user_id UUID NOT NULL REFERENCES users(id),
+	school_id UUID NOT NULL REFERENCES schools(id),
 	name TEXT NOT NULL,
 	metadata jsonb NOT NULL DEFAULT '{}',
 	archived boolean NOT NULL DEFAULT false,
@@ -37,12 +41,22 @@ CREATE TABLE teams (
 
 CREATE TABLE students (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-	team_id UUID NOT NULL REFERENCES teams(id),
+	school_id UUID NOT NULL REFERENCES schools(id),
 	name TEXT NOT NULL,
 	metadata jsonb NOT NULL DEFAULT '{}',
 	archived boolean NOT NULL DEFAULT false,
 	archived_on timestamp,
 	created_at timestamp NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE teams_students (
+	team_id UUID NOT NULL REFERENCES teams(id),
+	student_id UUID NOT NULL REFERENCES students(id)
+);
+
+CREATE TABLE teams_users (
+	team_id UUID NOT NULL REFERENCES teams(id),
+	user_id UUID NOT NULL REFERENCES users(id)
 );
 
 -- many to many relationship between identities and roles.
