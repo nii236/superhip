@@ -1,7 +1,17 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TABLE schools (
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	name TEXT NOT NULL,
+	metadata jsonb NOT NULL DEFAULT '{}',
+	archived boolean NOT NULL DEFAULT false,
+	archived_on timestamp,
+	created_at timestamp NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE users (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	school_id UUID NOT NULL REFERENCES schools(id),
 	first_name text NOT NULL,
 	last_name text NOT NULL,
 	email text NOT NULL,
@@ -13,11 +23,6 @@ CREATE TABLE users (
 	archived_on timestamp,
 	created_at timestamp NOT NULL DEFAULT NOW(),
 	CONSTRAINT users_email_key UNIQUE (email)
-);
-
-CREATE TABLE schools (
-	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-	name TEXT NOT NULL
 );
 
 CREATE TABLE teams (
@@ -32,8 +37,12 @@ CREATE TABLE teams (
 
 CREATE TABLE students (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	team_id UUID NOT NULL REFERENCES teams(id),
 	name TEXT NOT NULL,
-	team_id UUID NOT NULL REFERENCES teams(id)
+	metadata jsonb NOT NULL DEFAULT '{}',
+	archived boolean NOT NULL DEFAULT false,
+	archived_on timestamp,
+	created_at timestamp NOT NULL DEFAULT NOW()
 );
 
 -- many to many relationship between identities and roles.

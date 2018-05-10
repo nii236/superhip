@@ -11,6 +11,7 @@ import (
 // User is the user model
 type User struct {
 	ID                 uuid.UUID      `json:"id,omitempty" db:"id"`
+	SchoolID           uuid.UUID      `json:"school_id,omitempty" db:"school_id"`
 	Email              string         `json:"email,omitempty" db:"email"`
 	FirstName          string         `json:"first_name,omitempty" db:"first_name"`
 	LastName           string         `json:"last_name,omitempty" db:"last_name"`
@@ -26,6 +27,7 @@ type User struct {
 // CreateParams implements the Cruddable interface
 func (u *User) CreateParams() []interface{} {
 	return []interface{}{
+		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
@@ -52,6 +54,7 @@ func (u *User) ReadQuery() string {
 // UpdateManyParams implements the Cruddable interface
 func (u *User) UpdateManyParams() []interface{} {
 	return []interface{}{
+		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
@@ -64,6 +67,7 @@ func (u *User) UpdateManyParams() []interface{} {
 func (u *User) UpdateParams() []interface{} {
 	fmt.Printf("%+v", u)
 	return []interface{}{
+		&u.SchoolID,
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,

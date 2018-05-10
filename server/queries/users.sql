@@ -6,8 +6,8 @@ AND id = ANY($1);
 
 -- name: updatemany
 UPDATE users 
-SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
-WHERE id = ANY($6)
+SET (school_id, first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5,$6)
+WHERE id = ANY($7)
 RETURNING *;
 
 -- name: deletemany
@@ -24,13 +24,13 @@ WHERE users.archived = false
 AND "%s".id = $1;
 
 -- name: list
-SELECT id, first_name, last_name, email, role
+SELECT *
 FROM users
 WHERE archived=false;
 
 -- name: create
-INSERT INTO users (first_name, last_name, email, password_hash, role)
-VALUES ($1,$2,$3,$4,$5)
+INSERT INTO users (school_id, first_name, last_name, email, password_hash, role)
+VALUES ($1,$2,$3,$4,$5,$6)
 RETURNING *;
 
 -- name: read
@@ -41,8 +41,8 @@ AND archived=false;
 
 -- name: update
 UPDATE users 
-SET (first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5)
-WHERE id = $6
+SET (school_id, first_name, last_name, email, password_hash, role) = ($1,$2,$3,$4,$5,$6)
+WHERE id = $7
 AND archived=false
 RETURNING *;
 

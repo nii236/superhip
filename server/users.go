@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/antonholmquist/jason"
+	uuid "github.com/satori/go.uuid"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -163,6 +164,16 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
+	schoolFK, err := obj.GetString("school_id")
+	if err != nil {
+		return 500, fmt.Errorf("school_id: %s", err)
+	}
+
+	existing.SchoolID, err = uuid.FromString(schoolFK)
+	if err != nil {
+		return 500, err
+	}
+
 	existing.FirstName, err = obj.GetString("first_name")
 	if err != nil {
 		return 500, fmt.Errorf("first_name: %s", err)
@@ -226,6 +237,16 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 		return 500, err
 	}
 	updateTo := &models.User{}
+
+	schoolFK, err := obj.GetString("school_id")
+	if err != nil {
+		return 500, fmt.Errorf("school_id: %s", err)
+	}
+
+	updateTo.SchoolID, err = uuid.FromString(schoolFK)
+	if err != nil {
+		return 500, err
+	}
 	updateTo.FirstName, err = obj.GetString("first_name")
 	if err != nil {
 		return 500, fmt.Errorf("first_name: %s", err)
@@ -296,6 +317,16 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 	createWith := &models.User{}
+
+	schoolFK, err := obj.GetString("school_id")
+	if err != nil {
+		return 500, fmt.Errorf("school_id: %s", err)
+	}
+
+	createWith.SchoolID, err = uuid.FromString(schoolFK)
+	if err != nil {
+		return 500, err
+	}
 	createWith.FirstName, err = obj.GetString("first_name")
 	if err != nil {
 		return 500, fmt.Errorf("first_name: %s", err)
