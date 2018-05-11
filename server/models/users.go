@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -12,31 +12,45 @@ import (
 
 // User is the user model
 type User struct {
-	ID                 uuid.UUID      `json:"id,omitempty" db:"id"`
-	SchoolIDs          UUIDArray      `json:"school_ids,omitempty" db:"school_ids"`
-	Email              string         `json:"email,omitempty" db:"email"`
-	FirstName          string         `json:"first_name,omitempty" db:"first_name"`
-	LastName           string         `json:"last_name,omitempty" db:"last_name"`
-	PasswordHash       string         `json:"password_hash,omitempty" db:"password_hash"`
-	PasswordResetToken string         `json:"password_reset_token,omitempty" db:"password_reset_token"`
-	Role               string         `json:"role,omitempty" db:"role"`
-	Metadata           types.JSONText `json:"metadata,omitempty" db:"metadata"`
-	Archived           bool           `json:"archived,omitempty" db:"archived"`
-	ArchivedOn         *time.Time     `json:"archived_on,omitempty" db:"archived_on"`
-	CreatedAt          time.Time      `json:"created_at,omitempty" db:"created_at"`
+	ID                 uuid.UUID      `json:"id" db:"id"`
+	SchoolIDs          UUIDArray      `json:"school_ids" db:"school_ids"`
+	Email              string         `json:"email" db:"email"`
+	FirstName          string         `json:"first_name" db:"first_name"`
+	LastName           string         `json:"last_name" db:"last_name"`
+	PasswordHash       string         `json:"password_hash" db:"password_hash"`
+	PasswordResetToken string         `json:"password_reset_token" db:"password_reset_token"`
+	Role               string         `json:"role" db:"role"`
+	Metadata           types.JSONText `json:"metadata" db:"metadata"`
+	Archived           bool           `json:"archived" db:"archived"`
+	ArchivedOn         *time.Time     `json:"archived_on" db:"archived_on"`
+	CreatedAt          time.Time      `json:"created_at" db:"created_at"`
 }
 
-type UUIDArray struct {
-	UUIDs []uuid.UUID
-	// Valid bool
-}
+// UUIDArray is a list of UUIDs
+type UUIDArray []uuid.UUID
 
+// Scan scans the result into an array of UUIDs
 func (n *UUIDArray) Scan(value interface{}) error {
-	if value == nil {
-		n.UUIDs = []uuid.UUID{}
+	array := string(value.([]byte))
+	if array == "{NULL}" {
+		*n = UUIDArray{}
 		return nil
 	}
-	return pq.Array(&n.UUIDs).Scan(value)
+	array = strings.Replace(array, "{", "", -1)
+	array = strings.Replace(array, "}", "", -1)
+	ids := strings.Split(array, ",")
+	for _, v := range ids {
+		id := uuid.FromStringOrNil(v)
+		if id == uuid.Nil {
+			continue
+		}
+		current := *n
+		current = append(current, id)
+		*n = current
+	}
+	return nil
+
+	return pq.Array(&n).Scan(value)
 }
 
 // CreateParams implements the Cruddable interface
@@ -78,7 +92,6 @@ func (u *User) UpdateManyParams() []interface{} {
 
 // UpdateParams implements the Cruddable interface
 func (u *User) UpdateParams() []interface{} {
-	fmt.Printf("%+v", u)
 	return []interface{}{
 		&u.FirstName,
 		&u.LastName,

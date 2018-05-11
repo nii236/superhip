@@ -56,7 +56,7 @@ export const Edit = props => {
 				<TextInput source="email" />
 				<TextInput source="role" />
 				<TextInput source="password" />
-				<ReferenceArrayInput label="School" source="school_ids" reference="schools">
+				<ReferenceArrayInput allowEmpty label="School" source="school_ids" reference="schools">
 					<SelectArrayInput optionText="name" />
 				</ReferenceArrayInput>
 			</SimpleForm>

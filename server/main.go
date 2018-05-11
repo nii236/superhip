@@ -23,7 +23,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(withRecover)
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -44,6 +44,19 @@ func main() {
 
 	log.Println("Starting on :8080")
 	log.Fatalln(http.ListenAndServe(":8080", r))
+}
+func withRecover(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				log.Printf("PANIC: %+v\n", rvr)
+			}
+
+		}()
+
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }
 
 // ErrorResponse returns errors to the frontend

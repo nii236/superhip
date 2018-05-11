@@ -198,7 +198,6 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	}
 
 	updated := &models.User{}
-	fmt.Printf("%+v\n", existing)
 	err = db.Update(updated, existing, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
@@ -206,13 +205,14 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
+
 	schoolFKs, err := obj.GetStringArray("school_ids")
 	if err != nil {
-		return 500, fmt.Errorf("schools_id: %s", err)
+		return 500, fmt.Errorf("school_ids: %s", err)
 	}
 
+	db.DropJoins("schools_users", "user_id", updated.ID.String())
 	for _, v := range schoolFKs {
-		fmt.Println("MAKE JOIN")
 		err = db.MakeJoin("schools_users", "school_id", "user_id", v, updated.ID.String())
 		if err != nil {
 			return 500, err
@@ -279,7 +279,6 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 
 	updated := models.UserList{}
 
-	fmt.Println(updateTo)
 	err = db.UpdateMany(&updated, updateTo, IDs)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err

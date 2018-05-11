@@ -31,6 +31,24 @@ func (db *DB) List(collection Collection) error {
 	return db.conn.Select(collection, collection.ListQuery())
 }
 
+// DropJoins drops all joins for a table and fk
+func (db *DB) DropJoins(table string, col string, fk string) error {
+	isAlpha := regexp.MustCompile(`^[A-Za-z_]+$`).MatchString
+	if !isAlpha(table) {
+		panic("non alphanumeric string provided: table: " + table)
+	}
+	if !isAlpha(col) {
+		panic("non alphanumeric string provided: col1: " + col)
+	}
+
+	q := fmt.Sprintf(`DELETE FROM "%s" WHERE %s = $1`, table, col)
+	_, err := db.conn.Exec(q, fk)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // MakeJoin creates a join
 func (db *DB) MakeJoin(table string, col1 string, col2 string, fk1 string, fk2 string) error {
 	isAlpha := regexp.MustCompile(`^[A-Za-z_]+$`).MatchString

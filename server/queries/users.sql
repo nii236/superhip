@@ -26,15 +26,12 @@ AND "%s".id = $1;
 -- name: list
 SELECT 
 users.*,
-COALESCE(array_agg(schools.id), '{}'::UUID[])AS school_ids
+COALESCE(array_agg(schools.id), '{}'::UUID[]) AS school_ids
 FROM users
 LEFT JOIN schools_users ON schools_users.user_id = users.id
 LEFT JOIN schools ON schools_users.school_id = schools.id
 WHERE users.archived=false
 GROUP BY users.id
-
-
-
 
 -- name: create
 INSERT INTO users (first_name, last_name, email, password_hash, role)
