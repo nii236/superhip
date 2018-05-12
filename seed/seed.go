@@ -81,6 +81,15 @@ func (c *Seeder) seedPermissions() error {
 	_, err = c.Client.PermissionCreate(&models.Permission{
 		Name: "manage students",
 	})
+	_, err = c.Client.PermissionCreate(&models.Permission{
+		Name: "manage users",
+	})
+	_, err = c.Client.PermissionCreate(&models.Permission{
+		Name: "manage roles",
+	})
+	_, err = c.Client.PermissionCreate(&models.Permission{
+		Name: "manage permissions",
+	})
 	if err != nil {
 		return fmt.Errorf("could not create model: %s", err)
 	}

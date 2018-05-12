@@ -21,7 +21,6 @@ type User struct {
 	Password           string         `json:"password"`
 	PasswordHash       string         `json:"password_hash" db:"password_hash"`
 	PasswordResetToken string         `json:"password_reset_token" db:"password_reset_token"`
-	Role               string         `json:"role" db:"role"`
 	Metadata           types.JSONText `json:"metadata" db:"metadata"`
 	Archived           bool           `json:"archived" db:"archived"`
 	ArchivedOn         *time.Time     `json:"archived_on" db:"archived_on"`
@@ -62,7 +61,6 @@ func (u *User) CreateParams() []interface{} {
 		&u.LastName,
 		&u.Email,
 		&u.PasswordHash,
-		&u.Role,
 	}
 }
 
@@ -88,7 +86,6 @@ func (u *User) UpdateManyParams() []interface{} {
 		&u.LastName,
 		&u.Email,
 		&u.PasswordHash,
-		&u.Role,
 	}
 }
 
@@ -99,7 +96,6 @@ func (u *User) UpdateParams() []interface{} {
 		&u.LastName,
 		&u.Email,
 		&u.PasswordHash,
-		&u.Role,
 	}
 }
 

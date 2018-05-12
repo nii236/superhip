@@ -174,10 +174,7 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, fmt.Errorf("email: %s", err)
 	}
-	existing.Role, err = obj.GetString("role")
-	if err != nil {
-		return 500, fmt.Errorf("role: %s", err)
-	}
+
 	if err != nil {
 		return 500, err
 	}
@@ -269,13 +266,6 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	if err != nil {
 		return 500, fmt.Errorf("email: %s", err)
 	}
-	updateTo.Role, err = obj.GetString("role")
-	if err != nil {
-		return 500, fmt.Errorf("role: %s", err)
-	}
-	if err != nil {
-		return 500, err
-	}
 
 	password, err := obj.GetString("password")
 	if err != nil {
@@ -338,13 +328,6 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	createWith.Email, err = obj.GetString("email")
 	if err != nil {
 		return 500, fmt.Errorf("email: %s", err)
-	}
-	createWith.Role, err = obj.GetString("role")
-	if err != nil {
-		return 500, fmt.Errorf("role: %s", err)
-	}
-	if err != nil {
-		return 500, err
 	}
 
 	password, err := obj.GetString("password")

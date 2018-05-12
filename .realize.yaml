@@ -9,17 +9,21 @@ server:
   host: localhost
 schema:
 - name: server
-  path: .
+  path: ./server
   commands: 
     run: 
       status: true
   watcher:
     paths:
-    - /
+    - ../client
+    - ../models
+    - ../server
+    - ../seed
     extensions:
     - go
     - sql
     ignored_paths:
     - .git
     - .realize
+    - web
     - vendor

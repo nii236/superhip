@@ -169,6 +169,7 @@ func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	if err != nil {
 		return 500, fmt.Errorf("school_id: %s", err)
 	}
+
 	existing.SchoolID, err = uuid.FromString(schoolFK)
 	if err != nil {
 		return 500, err

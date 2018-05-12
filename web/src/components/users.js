@@ -22,11 +22,11 @@ import {
 	SingleFieldList,
 	ChipField,
 	SimpleShowLayout,
-	Field
+	Field,
+	AutocompleteInput
 } from "react-admin"
 
 import { List as IList } from "immutable"
-
 
 export const List = props => {
 	return (
@@ -35,7 +35,6 @@ export const List = props => {
 				<TextField source="first_name" />
 				<TextField source="last_name" />
 				<TextField source="email" />
-				<TextField source="role" />
 				<ReferenceArrayField label="Roles" reference="roles" source="role_ids">
 					<SingleFieldList linkType="show">
 						<ChipField source="name" />
@@ -52,7 +51,7 @@ export const List = props => {
 	)
 }
 
-export const Show = (props) => (
+export const Show = props => (
 	<AdminShow title={<Title />} {...props}>
 		<SimpleShowLayout>
 			<TextField source="first_name" />
@@ -63,7 +62,7 @@ export const Show = (props) => (
 				</SingleFieldList>
 			</ReferenceArrayField>
 			<ReferenceArrayField label="Schools" reference="schools" source="school_ids">
-				<SingleFieldList linkType="show" >
+				<SingleFieldList linkType="show">
 					<ChipField source="name" />
 				</SingleFieldList>
 			</ReferenceArrayField>
@@ -71,56 +70,52 @@ export const Show = (props) => (
 	</AdminShow>
 )
 
-
 export const Title = ({ record }) => {
 	return <span>User {record.first_name ? `"${record.first_name}"` : ""}</span>
 }
-const TestInput = (props) => {
-	console.log(props.parent)
-	// console.log(props.record)
-	// console.log(props.input.value)
-	return (<SelectArrayInput{...props} />)
-}
 
-const WithProps = ({ children, ...props }) => children(props);
+const WithProps = ({ children, ...props }) => children(props)
 
 export const Edit = props => {
 	return (
 		<AdminEdit title={<Title />} {...props}>
-			{WithProps(
-				<SimpleForm>
-					<TextInput source="first_name" />
-					<TextInput source="last_name" />
-					<TextInput source="email" />
-					<TextInput source="role" />
-					<TextInput source="password" />
-					<ReferenceArrayInput label="Role" source="role_ids" reference="roles">
-						<TestInput parent={props} />
-					</ReferenceArrayInput>
-					<ReferenceArrayInput label="School" source="school_ids" reference="schools">
-						<SelectArrayInput optionText="name" />
-					</ReferenceArrayInput>
-
-				</SimpleForm>)}
-
-		</AdminEdit >
+			<SimpleForm>
+				<ReferenceArrayInput label="Role" source="role_ids" reference="roles">
+					<SelectArrayInput optionText="name">
+						<ChipField source="name" />
+					</SelectArrayInput>
+				</ReferenceArrayInput>
+				<ReferenceArrayInput label="School" source="school_ids" reference="schools">
+					<SelectArrayInput optionText="name">
+						<ChipField source="name" />
+					</SelectArrayInput>
+				</ReferenceArrayInput>
+				<TextInput source="first_name" />
+				<TextInput source="last_name" />
+				<TextInput source="email" />
+				<TextInput source="password" />
+			</SimpleForm>
+		</AdminEdit>
 	)
 }
 
 export const Create = props => (
 	<AdminCreate title={<Title />} {...props}>
 		<SimpleForm>
+			<ReferenceArrayInput label="Roles" reference="roles" source="role_ids">
+				<SelectArrayInput optionText="name">
+					<ChipField source="name" />
+				</SelectArrayInput>
+			</ReferenceArrayInput>
+			<ReferenceArrayInput label="School" source="school_ids" reference="schools">
+				<SelectArrayInput optionText="name">
+					<ChipField source="name" />
+				</SelectArrayInput>
+			</ReferenceArrayInput>
 			<TextInput source="first_name" />
 			<TextInput source="last_name" />
 			<TextInput source="email" />
-			<TextInput source="role" />
 			<TextInput source="password" />
-			<ReferenceArrayInput label="Roles" reference="roles" source="role_ids">
-				<SelectArrayInput optionText="name" />
-			</ReferenceArrayInput>
-			<ReferenceArrayInput label="School" source="school_ids" reference="schools">
-				<SelectArrayInput optionText="name" />
-			</ReferenceArrayInput>
 		</SimpleForm>
 	</AdminCreate>
 )

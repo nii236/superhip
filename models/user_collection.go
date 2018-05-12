@@ -26,7 +26,6 @@ func (u *UserList) ReferenceQuery(table string, column string) string {
 
 	q := userQueries["reference"]
 	return fmt.Sprintf(q, table, table, column, table)
-
 }
 
 // GetManyQuery implements the Collection interface
