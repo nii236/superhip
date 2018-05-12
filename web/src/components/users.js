@@ -9,6 +9,7 @@ import {
 	TextInput,
 	LongTextInput,
 	EditButton,
+	ShowButton,
 	Admin,
 	Resource,
 	List as AdminList,
@@ -23,7 +24,8 @@ import {
 	ChipField,
 	SimpleShowLayout,
 	Field,
-	AutocompleteInput
+	AutocompleteInput,
+	SimpleList
 } from "react-admin"
 
 import { List as IList } from "immutable"
@@ -45,7 +47,13 @@ export const List = props => {
 						<ChipField source="name" />
 					</SingleFieldList>
 				</ReferenceArrayField>
+				<ReferenceArrayField label="Teams" reference="teams" source="team_ids">
+					<SingleFieldList linkType="show">
+						<ChipField source="name" />
+					</SingleFieldList>
+				</ReferenceArrayField>
 				<EditButton />
+				<ShowButton />
 			</Datagrid>
 		</AdminList>
 	)
@@ -66,6 +74,11 @@ export const Show = props => (
 					<ChipField source="name" />
 				</SingleFieldList>
 			</ReferenceArrayField>
+			<ReferenceArrayField label="Teams" reference="teams" source="team_ids">
+				<SingleFieldList linkType="show">
+					<ChipField source="name" />
+				</SingleFieldList>
+			</ReferenceArrayField>
 		</SimpleShowLayout>
 	</AdminShow>
 )
@@ -80,12 +93,17 @@ export const Edit = props => {
 	return (
 		<AdminEdit title={<Title />} {...props}>
 			<SimpleForm>
-				<ReferenceArrayInput label="Role" source="role_ids" reference="roles">
+				<ReferenceArrayInput label="Roles" source="role_ids" reference="roles">
 					<SelectArrayInput optionText="name">
 						<ChipField source="name" />
 					</SelectArrayInput>
 				</ReferenceArrayInput>
-				<ReferenceArrayInput label="School" source="school_ids" reference="schools">
+				<ReferenceArrayInput label="Schools" source="school_ids" reference="schools">
+					<SelectArrayInput optionText="name">
+						<ChipField source="name" />
+					</SelectArrayInput>
+				</ReferenceArrayInput>
+				<ReferenceArrayInput label="Teams" source="team_ids" reference="teams">
 					<SelectArrayInput optionText="name">
 						<ChipField source="name" />
 					</SelectArrayInput>
@@ -102,12 +120,17 @@ export const Edit = props => {
 export const Create = props => (
 	<AdminCreate title={<Title />} {...props}>
 		<SimpleForm>
-			<ReferenceArrayInput label="Roles" reference="roles" source="role_ids">
+			<ReferenceArrayInput label="Roles" source="role_ids" reference="roles">
 				<SelectArrayInput optionText="name">
 					<ChipField source="name" />
 				</SelectArrayInput>
 			</ReferenceArrayInput>
-			<ReferenceArrayInput label="School" source="school_ids" reference="schools">
+			<ReferenceArrayInput label="Schools" source="school_ids" reference="schools">
+				<SelectArrayInput optionText="name">
+					<ChipField source="name" />
+				</SelectArrayInput>
+			</ReferenceArrayInput>
+			<ReferenceArrayInput label="Teams" source="team_ids" reference="teams">
 				<SelectArrayInput optionText="name">
 					<ChipField source="name" />
 				</SelectArrayInput>

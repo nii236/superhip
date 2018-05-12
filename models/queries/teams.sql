@@ -57,8 +57,7 @@ WHERE users.archived = false
 AND "%s".id = $1;
 
 -- name: list
-SELECT 
-t.*
+SELECT t.*
 FROM (
 	SELECT teams.*,
 	COALESCE(array_agg(DISTINCT users.id), '{}'::UUID[]) AS user_ids,
@@ -78,7 +77,7 @@ OFFSET $2;
 
 
 -- name: create
-INSERT INTO teams name = $1, school_id = $2
+INSERT INTO teams (school_id, name) VALUES ($1, $2)
 RETURNING *;
 
 -- name: read

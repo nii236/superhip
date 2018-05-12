@@ -62,7 +62,7 @@ func (db *DB) List(collection Collection, opts *ListOptions) error {
 	}
 	offset := &sql.NullInt64{}
 	if opts.Offset != 0 {
-		offset.Scan(int64(opts.Offset - 1))
+		offset.Scan(int64((opts.Offset - 1) * opts.Limit))
 	}
 
 	// orderBy := "created_at"
@@ -79,7 +79,7 @@ func (db *DB) List(collection Collection, opts *ListOptions) error {
 // UpdateJoins will drop then make joins
 func (db *DB) UpdateJoins(table, col1, col2 string, fk1 uuid.UUID, fk2 []uuid.UUID) error {
 	fmt.Println("DB: RUNNING UPDATEJOINS")
-	err := db.DropJoins(table, col1, fk1.String())
+	err := db.DropJoins(table, col1, fk1)
 	if err != nil {
 		return fmt.Errorf("could not drop joins: %s", err)
 	}
@@ -94,7 +94,7 @@ func (db *DB) UpdateJoins(table, col1, col2 string, fk1 uuid.UUID, fk2 []uuid.UU
 }
 
 // DropJoins drops all joins for a table and fk
-func (db *DB) DropJoins(table string, col string, fk string) error {
+func (db *DB) DropJoins(table string, col string, fk uuid.UUID) error {
 	fmt.Println("DB: RUNNING DROPJOINS")
 	isAlpha := regexp.MustCompile(`^[A-Za-z_]+$`).MatchString
 	if !isAlpha(table) {
@@ -151,6 +151,7 @@ func (db *DB) DeleteMany(collection Collection, IDs []string) error {
 // GetMany implements the Collectioner interface
 func (db *DB) GetMany(collection Collection, IDs []string) error {
 	fmt.Println("DB: RUNNING GETMANY")
+	fmt.Println(IDs)
 	return db.conn.Select(collection, collection.GetManyQuery(), pq.Array(IDs))
 }
 

@@ -31,7 +31,7 @@ type Seeder struct {
 }
 
 func main() {
-	c := client.New("http://localhost:8080")
+	c := client.New("http://localhost:8080/api")
 	f, err := faker.New("en")
 	if err != nil {
 		fmt.Println(err)
@@ -73,22 +73,22 @@ func main() {
 func (c *Seeder) seedPermissions() error {
 	var err error
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage schools",
+		Name: "Can manage schools",
 	})
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage teams",
+		Name: "Can manage teams",
 	})
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage students",
+		Name: "Can manage students",
 	})
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage users",
+		Name: "Can manage users",
 	})
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage roles",
+		Name: "Can manage roles",
 	})
 	_, err = c.Client.PermissionCreate(&models.Permission{
-		Name: "manage permissions",
+		Name: "Can manage permissions",
 	})
 	if err != nil {
 		return fmt.Errorf("could not create model: %s", err)

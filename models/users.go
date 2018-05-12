@@ -12,6 +12,7 @@ type User struct {
 	ID                 uuid.UUID      `json:"id" db:"id"`
 	SchoolIDs          UUIDArray      `json:"school_ids" db:"school_ids"`
 	RoleIDs            UUIDArray      `json:"role_ids" db:"role_ids"`
+	TeamIDs            UUIDArray      `json:"team_ids" db:"team_ids"`
 	Email              string         `json:"email" db:"email"`
 	FirstName          string         `json:"first_name" db:"first_name"`
 	LastName           string         `json:"last_name" db:"last_name"`

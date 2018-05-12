@@ -192,7 +192,19 @@ func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-
+	teamFKs, err := obj.GetStringArray("team_ids")
+	if err == nil {
+		teamUUIDs := []uuid.UUID{}
+		for _, fk := range teamFKs {
+			teamUUIDs = append(teamUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_students", "student_id", "team_id", updated.ID, teamUUIDs)
+		if err != nil {
+			return 500, err
+		}
+	} else {
+		fmt.Println("no team ids provided")
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal([]*models.Student{updated}),
@@ -282,7 +294,19 @@ func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-
+	teamFKs, err := obj.GetStringArray("team_ids")
+	if err == nil {
+		teamUUIDs := []uuid.UUID{}
+		for _, fk := range teamFKs {
+			teamUUIDs = append(teamUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_students", "student_id", "team_id", created.ID, teamUUIDs)
+		if err != nil {
+			return 500, err
+		}
+	} else {
+		fmt.Println("no team ids provided")
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.StudentList{created}),
@@ -312,7 +336,10 @@ func studentsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	if err != nil {
 		return 500, err
 	}
-
+	err = db.DropJoins("teams_students", "student_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.StudentList{result}),
@@ -339,6 +366,13 @@ func studentsDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+
+	for _, ID := range IDs {
+		err = db.DropJoins("teams_students", "student_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
 	}
 
 	w.Write(mustMarshal(&models.Response{

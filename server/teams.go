@@ -369,7 +369,14 @@ func teamsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, err
 	}
-
+	err = db.DropJoins("teams_users", "team_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
+	err = db.DropJoins("teams_students", "team_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.TeamList{result}),
@@ -396,6 +403,17 @@ func teamsDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+
+	for _, ID := range IDs {
+		err = db.DropJoins("teams_users", "team_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
+		err = db.DropJoins("teams_students", "team_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
 	}
 
 	w.Write(mustMarshal(&models.Response{

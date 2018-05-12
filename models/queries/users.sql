@@ -1,12 +1,15 @@
 -- name: getmany
 SELECT users.*,
 COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 FROM users
-LEFT JOIN schools_users ON schools_users.user_id = users.id
-LEFT JOIN schools ON schools_users.school_id = schools.id
-LEFT JOIN roles_users ON roles_users.user_id = users.id
-LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN schools_users ON schools_users.user_id = users.id
+	LEFT JOIN schools ON schools_users.school_id = schools.id
+	LEFT JOIN roles_users ON roles_users.user_id = users.id
+	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 WHERE users.archived=false
 AND users.id = ANY($1)
 GROUP BY users.id
@@ -17,12 +20,15 @@ SET (first_name, last_name, email, password_hash) = ($1,$2,$3,$4)
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	AND users.id = ANY($5)
 	GROUP BY users.id
@@ -36,12 +42,15 @@ SET archived=true
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	AND users.id = ANY($1)
 	GROUP BY users.id
@@ -62,12 +71,15 @@ u.*
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	GROUP BY users.id
 ) u
@@ -88,12 +100,15 @@ u.*
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	AND users.id = $1
 	GROUP BY users.id
@@ -106,12 +121,15 @@ SET (first_name, last_name, email, password_hash) = ($1,$2,$3,$4)
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	AND users.id = $5
 	GROUP BY users.id
@@ -125,12 +143,15 @@ SET archived=true
 FROM (
 	SELECT users.*,
 	COALESCE(array_agg(DISTINCT schools.id), '{}'::UUID[]) AS school_ids,
-	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids
+	COALESCE(array_agg(DISTINCT roles.id), '{}'::UUID[]) AS role_ids,
+	COALESCE(array_agg(DISTINCT teams.id), '{}'::UUID[]) AS team_ids
 	FROM users
 	LEFT JOIN schools_users ON schools_users.user_id = users.id
 	LEFT JOIN schools ON schools_users.school_id = schools.id
 	LEFT JOIN roles_users ON roles_users.user_id = users.id
 	LEFT JOIN roles ON roles_users.role_id = roles.id
+	LEFT JOIN teams_users ON teams_users.user_id = users.id
+	LEFT JOIN teams ON teams_users.team_id = teams.id
 	WHERE users.archived=false
 	AND users.id = $1
 	GROUP BY users.id

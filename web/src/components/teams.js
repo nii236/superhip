@@ -8,6 +8,7 @@ import {
 	TextInput,
 	LongTextInput,
 	EditButton,
+	ShowButton,
 	Resource,
 	Edit as AdminEdit,
 	List as AdminList,
@@ -47,6 +48,7 @@ export const List = props => {
 					</SingleFieldList>
 				</ReferenceArrayField>
 				<EditButton />
+				<ShowButton />
 			</Datagrid>
 		</AdminList>
 	)
@@ -55,6 +57,19 @@ export const Show = props => (
 	<AdminShow title={<Title />} {...props}>
 		<SimpleShowLayout>
 			<TextField source="name" />
+			<ReferenceField label="School" source="school_id" reference="schools">
+				<TextField source="name" />
+			</ReferenceField>
+			<ReferenceArrayField label="Users" reference="users" source="user_ids">
+				<SingleFieldList linkType="show">
+					<ChipField source="first_name" />
+				</SingleFieldList>
+			</ReferenceArrayField>
+			<ReferenceArrayField label="Students" reference="students" source="student_ids">
+				<SingleFieldList linkType="show">
+					<ChipField source="name" />
+				</SingleFieldList>
+			</ReferenceArrayField>
 		</SimpleShowLayout>
 	</AdminShow>
 )

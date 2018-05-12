@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/antonholmquist/jason"
+	uuid "github.com/satori/go.uuid"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -211,38 +212,50 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	err = db.DropJoins("schools_users", "user_id", updated.ID.String())
-	if err != nil {
-		return 500, fmt.Errorf("could not drop joins: %s", err)
-	}
 	schoolFKs, err := obj.GetStringArray("school_ids")
 	if err == nil {
-		for _, v := range schoolFKs {
-			err = db.MakeJoin("schools_users", "school_id", "user_id", v, updated.ID.String())
-			if err != nil {
-				return 500, err
-			}
+		schoolUUIDs := []uuid.UUID{}
+		for _, fk := range schoolFKs {
+			schoolUUIDs = append(schoolUUIDs, uuid.FromStringOrNil(fk))
 		}
+		err = db.UpdateJoins("schools_users", "user_id", "school_id", updated.ID, schoolUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
 	} else {
-		fmt.Println("no school ids provided")
+		fmt.Println("no team ids provided")
 	}
 
-	err = db.DropJoins("roles_users", "user_id", updated.ID.String())
-	if err != nil {
-		return 500, fmt.Errorf("could not drop joins: %s", err)
-	}
 	roleFKs, err := obj.GetStringArray("role_ids")
 	if err == nil {
-		for _, v := range roleFKs {
-			err = db.MakeJoin("roles_users", "role_id", "user_id", v, updated.ID.String())
-			if err != nil {
-				return 500, err
-			}
+		roleUUIDs := []uuid.UUID{}
+		for _, fk := range roleFKs {
+			roleUUIDs = append(roleUUIDs, uuid.FromStringOrNil(fk))
 		}
+		err = db.UpdateJoins("roles_users", "user_id", "role_id", updated.ID, roleUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
 	} else {
-		fmt.Println("no row ids provided")
+		fmt.Println("no team ids provided")
 	}
 
+	teamFKs, err := obj.GetStringArray("team_ids")
+	if err == nil {
+		teamUUIDs := []uuid.UUID{}
+		for _, fk := range teamFKs {
+			teamUUIDs = append(teamUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_users", "user_id", "team_id", updated.ID, teamUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
+	} else {
+		fmt.Println("no team ids provided")
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal([]*models.User{updated}),
@@ -305,36 +318,49 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	}
 
 	for _, v := range req.IDs {
-		err = db.DropJoins("schools_users", "user_id", v.String())
-		if err != nil {
-			return 500, fmt.Errorf("could not drop joins: %s", err)
-		}
 		schoolFKs, err := obj.GetStringArray("school_ids")
 		if err == nil {
+			schoolUUIDs := []uuid.UUID{}
 			for _, fk := range schoolFKs {
-				err = db.MakeJoin("schools_users", "school_id", "user_id", fk, v.String())
-				if err != nil {
-					return 500, err
-				}
+				schoolUUIDs = append(schoolUUIDs, uuid.FromStringOrNil(fk))
 			}
+			err = db.UpdateJoins("schools_users", "user_id", "school_id", *v, schoolUUIDs)
+			if err != nil {
+				return 500, err
+			}
+
 		} else {
-			fmt.Println("no school ids provided")
+			fmt.Println("no team ids provided")
 		}
 
-		err = db.DropJoins("roles_users", "user_id", v.String())
-		if err != nil {
-			return 500, fmt.Errorf("could not drop joins: %s", err)
-		}
 		roleFKs, err := obj.GetStringArray("role_ids")
 		if err == nil {
+			roleUUIDs := []uuid.UUID{}
 			for _, fk := range roleFKs {
-				err = db.MakeJoin("roles_users", "role_id", "user_id", fk, v.String())
-				if err != nil {
-					return 500, err
-				}
+				roleUUIDs = append(roleUUIDs, uuid.FromStringOrNil(fk))
 			}
+			err = db.UpdateJoins("roles_users", "user_id", "role_id", *v, roleUUIDs)
+			if err != nil {
+				return 500, err
+			}
+
 		} else {
-			fmt.Println("no row ids provided")
+			fmt.Println("no team ids provided")
+		}
+
+		teamFKs, err := obj.GetStringArray("team_ids")
+		if err == nil {
+			teamUUIDs := []uuid.UUID{}
+			for _, fk := range teamFKs {
+				teamUUIDs = append(teamUUIDs, uuid.FromStringOrNil(fk))
+			}
+			err = db.UpdateJoins("teams_users", "user_id", "team_id", *v, teamUUIDs)
+			if err != nil {
+				return 500, err
+			}
+
+		} else {
+			fmt.Println("no team ids provided")
 		}
 	}
 
@@ -393,37 +419,49 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	err = db.DropJoins("schools_users", "user_id", created.ID.String())
-	if err != nil {
-		return 500, fmt.Errorf("could not drop joins: %s", err)
-	}
-
 	schoolFKs, err := obj.GetStringArray("school_ids")
 	if err == nil {
-		for _, v := range schoolFKs {
-			err = db.MakeJoin("schools_users", "school_id", "user_id", v, created.ID.String())
-			if err != nil {
-				return 500, err
-			}
+		schoolUUIDs := []uuid.UUID{}
+		for _, fk := range schoolFKs {
+			schoolUUIDs = append(schoolUUIDs, uuid.FromStringOrNil(fk))
 		}
+		err = db.UpdateJoins("schools_users", "user_id", "school_id", created.ID, schoolUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
 	} else {
-		fmt.Println("no school ids provided")
+		fmt.Println("no team ids provided")
 	}
 
-	err = db.DropJoins("roles_users", "user_id", created.ID.String())
-	if err != nil {
-		return 500, fmt.Errorf("could not drop joins: %s", err)
-	}
 	roleFKs, err := obj.GetStringArray("role_ids")
 	if err == nil {
-		for _, v := range roleFKs {
-			err = db.MakeJoin("roles_users", "role_id", "user_id", v, created.ID.String())
-			if err != nil {
-				return 500, err
-			}
+		roleUUIDs := []uuid.UUID{}
+		for _, fk := range roleFKs {
+			roleUUIDs = append(roleUUIDs, uuid.FromStringOrNil(fk))
 		}
+		err = db.UpdateJoins("roles_users", "user_id", "role_id", created.ID, roleUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
 	} else {
-		fmt.Println("no row ids provided")
+		fmt.Println("no team ids provided")
+	}
+
+	teamFKs, err := obj.GetStringArray("team_ids")
+	if err == nil {
+		teamUUIDs := []uuid.UUID{}
+		for _, fk := range teamFKs {
+			teamUUIDs = append(teamUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_users", "user_id", "team_id", created.ID, teamUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
+	} else {
+		fmt.Println("no team ids provided")
 	}
 
 	w.Write(mustMarshal(&models.Response{
@@ -455,7 +493,18 @@ func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		return 500, err
 	}
-
+	err = db.DropJoins("schools_users", "user_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
+	err = db.DropJoins("roles_users", "user_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
+	err = db.DropJoins("teams_users", "user_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.UserList{result}),
@@ -482,6 +531,21 @@ func usersDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+
+	for _, ID := range IDs {
+		err = db.DropJoins("schools_users", "user_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
+		err = db.DropJoins("roles_users", "user_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
+		err = db.DropJoins("teams_users", "user_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
 	}
 
 	w.Write(mustMarshal(&models.Response{

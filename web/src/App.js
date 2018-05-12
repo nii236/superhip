@@ -15,7 +15,14 @@ import { Admin, Resource } from "react-admin"
 
 fontawesome.library.add(faCoffee)
 
-const dataProvider = data.Provider("http://localhost:8080")
+// console.log(createMuiTheme)
+// const theme = createMuiTheme({
+// 	palette: {
+// 		type: "dark" // Switching the dark mode on is a single property value change.
+// 	}
+// })
+
+const dataProvider = data.Provider("/api")
 const App = props => {
 	return (
 		<Admin dataProvider={dataProvider} authProvider={auth.Provider}>

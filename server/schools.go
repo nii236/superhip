@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/antonholmquist/jason"
+	uuid "github.com/satori/go.uuid"
 
 	_ "github.com/lib/pq"
 	"github.com/nii236/superhip/models"
@@ -286,7 +287,10 @@ func schoolsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) 
 	if err != nil {
 		return 500, err
 	}
-
+	err = db.DropJoins("schools_users", "school_id", req.ID)
+	if err != nil {
+		return 500, err
+	}
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.SchoolList{result}),
@@ -313,6 +317,12 @@ func schoolsDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, err
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+	for _, ID := range IDs {
+		err = db.DropJoins("schools_users", "school_id", uuid.FromStringOrNil(ID))
+		if err != nil {
+			return 500, err
+		}
 	}
 
 	w.Write(mustMarshal(&models.Response{
