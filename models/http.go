@@ -10,7 +10,7 @@ import (
 type GetListRequest struct {
 	Pagination struct {
 		Page    int `json:"page,omitempty"`
-		PerPage int `json:"per_page,omitempty"`
+		PerPage int `json:"perPage,omitempty"`
 	} `json:"pagination,omitempty"`
 	Sort struct {
 		Field string `json:"field,omitempty"`

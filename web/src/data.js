@@ -26,6 +26,7 @@ const Provider = (apiUrl, httpClient = fetchJson) => {
 			case GET_LIST: {
 				options.method = "POST"
 				options.body = JSON.stringify(params)
+				console.log(params)
 				url = `${apiUrl}/${resource}/get/list`
 				break
 			}

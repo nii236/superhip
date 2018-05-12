@@ -11,6 +11,8 @@ import (
 type Team struct {
 	ID         uuid.UUID      `json:"id,omitempty" db:"id"`
 	SchoolID   uuid.UUID      `json:"school_id,omitempty" db:"school_id"`
+	UserIDs    UUIDArray      `json:"user_ids" db:"user_ids"`
+	StudentIDs UUIDArray      `json:"student_ids" db:"student_ids"`
 	Name       string         `json:"name,omitempty" db:"name"`
 	Metadata   types.JSONText `json:"metadata,omitempty" db:"metadata"`
 	Archived   bool           `json:"archived,omitempty" db:"archived"`

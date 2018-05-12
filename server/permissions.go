@@ -41,16 +41,25 @@ func permissionsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 
 	result := models.PermissionList{}
 
-	err := db.List(&result)
+	opts := &ListOptions{
+		Offset:         req.Pagination.Page,
+		Limit:          req.Pagination.PerPage,
+		OrderBy:        req.Sort.Field,
+		OrderDirection: req.Sort.Order,
+	}
+	err := db.List(&result, opts)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-
+	total, err := db.Total("permissions")
+	if err != nil {
+		return 500, err
+	}
 	resp := &models.Response{
-		Total: len(result),
+		Total: total,
 		Data:  mustMarshal(result),
 	}
 	w.Write(mustMarshal(resp))

@@ -43,8 +43,13 @@ func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	defer r.Body.Close()
 
 	result := models.UserList{}
-
-	err := db.List(&result)
+	opts := &ListOptions{
+		Offset:         req.Pagination.Page,
+		Limit:          req.Pagination.PerPage,
+		OrderBy:        req.Sort.Field,
+		OrderDirection: req.Sort.Order,
+	}
+	err := db.List(&result, opts)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
@@ -52,8 +57,12 @@ func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
+	total, err := db.Total("users")
+	if err != nil {
+		return 500, err
+	}
 	resp := &models.Response{
-		Total: len(result),
+		Total: total,
 		Data:  mustMarshal(result),
 	}
 	w.Write(mustMarshal(resp))
@@ -293,6 +302,40 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+
+	for _, v := range req.IDs {
+		err = db.DropJoins("schools_users", "user_id", v.String())
+		if err != nil {
+			return 500, fmt.Errorf("could not drop joins: %s", err)
+		}
+		schoolFKs, err := obj.GetStringArray("school_ids")
+		if err == nil {
+			for _, fk := range schoolFKs {
+				err = db.MakeJoin("schools_users", "school_id", "user_id", fk, v.String())
+				if err != nil {
+					return 500, err
+				}
+			}
+		} else {
+			fmt.Println("no school ids provided")
+		}
+
+		err = db.DropJoins("roles_users", "user_id", v.String())
+		if err != nil {
+			return 500, fmt.Errorf("could not drop joins: %s", err)
+		}
+		roleFKs, err := obj.GetStringArray("role_ids")
+		if err == nil {
+			for _, fk := range roleFKs {
+				err = db.MakeJoin("roles_users", "role_id", "user_id", fk, v.String())
+				if err != nil {
+					return 500, err
+				}
+			}
+		} else {
+			fmt.Println("no row ids provided")
+		}
 	}
 
 	w.Write(mustMarshal(&models.Response{

@@ -72,7 +72,9 @@ FROM (
 	GROUP BY users.id
 ) u
 JOIN users ON u.id = users.id
-WHERE users.id = u.id;
+WHERE users.id = u.id
+LIMIT $1
+OFFSET $2;
 
 
 -- name: create

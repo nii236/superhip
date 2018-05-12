@@ -42,17 +42,25 @@ func teamsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	defer r.Body.Close()
 
 	result := models.TeamList{}
-
-	err := db.List(&result)
+	opts := &ListOptions{
+		Offset:         req.Pagination.Page,
+		Limit:          req.Pagination.PerPage,
+		OrderBy:        req.Sort.Field,
+		OrderDirection: req.Sort.Order,
+	}
+	err := db.List(&result, opts)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-
+	total, err := db.Total("users")
+	if err != nil {
+		return 500, err
+	}
 	resp := &models.Response{
-		Total: len(result),
+		Total: total,
 		Data:  mustMarshal(result),
 	}
 	w.Write(mustMarshal(resp))
@@ -183,6 +191,35 @@ func teamsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
+	userFKs, err := obj.GetStringArray("user_ids")
+	if err == nil {
+		userUUIDs := []uuid.UUID{}
+		for _, fk := range userFKs {
+			userUUIDs = append(userUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_users", "team_id", "user_id", updated.ID, userUUIDs)
+		if err != nil {
+			return 500, err
+		}
+	} else {
+		fmt.Println("no user ids provided")
+	}
+
+	studentFKs, err := obj.GetStringArray("student_ids")
+	if err == nil {
+		studentUUIDs := []uuid.UUID{}
+		for _, fk := range studentFKs {
+			studentUUIDs = append(studentUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_students", "team_id", "student_id", updated.ID, studentUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
+	} else {
+		fmt.Println("no user ids provided")
+	}
+
 	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal([]*models.Team{updated}),
@@ -272,6 +309,35 @@ func teamsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
+	}
+
+	userFKs, err := obj.GetStringArray("user_ids")
+	if err == nil {
+		userUUIDs := []uuid.UUID{}
+		for _, fk := range userFKs {
+			userUUIDs = append(userUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_users", "team_id", "user_id", created.ID, userUUIDs)
+		if err != nil {
+			return 500, err
+		}
+	} else {
+		fmt.Println("no user ids provided")
+	}
+
+	studentFKs, err := obj.GetStringArray("student_ids")
+	if err == nil {
+		studentUUIDs := []uuid.UUID{}
+		for _, fk := range studentFKs {
+			studentUUIDs = append(studentUUIDs, uuid.FromStringOrNil(fk))
+		}
+		err = db.UpdateJoins("teams_students", "team_id", "student_id", created.ID, studentUUIDs)
+		if err != nil {
+			return 500, err
+		}
+
+	} else {
+		fmt.Println("no user ids provided")
 	}
 
 	w.Write(mustMarshal(&models.Response{

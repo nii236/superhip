@@ -1,10 +1,7 @@
 package models
 
 import (
-	"strings"
 	"time"
-
-	"github.com/lib/pq"
 
 	"github.com/jmoiron/sqlx/types"
 	uuid "github.com/satori/go.uuid"
@@ -25,33 +22,6 @@ type User struct {
 	Archived           bool           `json:"archived" db:"archived"`
 	ArchivedOn         *time.Time     `json:"archived_on" db:"archived_on"`
 	CreatedAt          time.Time      `json:"created_at" db:"created_at"`
-}
-
-// UUIDArray is a list of UUIDs
-type UUIDArray []uuid.UUID
-
-// Scan scans the result into an array of UUIDs
-func (n *UUIDArray) Scan(value interface{}) error {
-	array := string(value.([]byte))
-	if array == "{NULL}" {
-		*n = UUIDArray{}
-		return nil
-	}
-	array = strings.Replace(array, "{", "", -1)
-	array = strings.Replace(array, "}", "", -1)
-	ids := strings.Split(array, ",")
-	for _, v := range ids {
-		id := uuid.FromStringOrNil(v)
-		if id == uuid.Nil {
-			continue
-		}
-		current := *n
-		current = append(current, id)
-		*n = current
-	}
-	return nil
-
-	return pq.Array(&n).Scan(value)
 }
 
 // CreateParams implements the Cruddable interface

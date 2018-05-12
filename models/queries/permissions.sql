@@ -26,7 +26,9 @@ AND "%s".id = $1;
 -- name: list
 SELECT *
 FROM permissions
-WHERE archived=false;
+WHERE archived=false
+LIMIT $1
+OFFSET $2;
 
 -- name: create
 INSERT INTO permissions (name)

@@ -11,7 +11,7 @@ type Collection interface {
 
 // Collectioner are the methods needed by the DB to handle collections
 type Collectioner interface {
-	List(collection Collection) error
+	List(collection Collection, opts *ListOptions) error
 	Reference(collection Collection, table string, column string, ID string) error
 	GetMany(collection Collection, IDs []string) error
 	UpdateMany(collection Collection, item Item, IDs []string) error
