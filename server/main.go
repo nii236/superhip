@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -23,7 +24,8 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
-	r.Use(withRecover)
+	r.Use(middleware.Recoverer)
+
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -40,6 +42,8 @@ func main() {
 	r.Mount("/users", userRouter(db))
 	r.Mount("/teams", teamRouter(db))
 	r.Mount("/schools", schoolRouter(db))
+	r.Mount("/permissions", permissionRouter(db))
+	r.Mount("/roles", roleRouter(db))
 	r.Mount("/students", studentRouter(db))
 
 	log.Println("Starting on :8080")
@@ -50,6 +54,7 @@ func withRecover(next http.Handler) http.Handler {
 		defer func() {
 			if rvr := recover(); rvr != nil {
 				log.Printf("PANIC: %+v\n", rvr)
+				debug.Stack()
 			}
 
 		}()

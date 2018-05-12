@@ -12,8 +12,10 @@ import {
     Edit as AdminEdit,
     List as AdminList,
     Create as AdminCreate,
+    Show as AdminShow,
     Datagrid,
-    TextField
+    TextField,
+    SimpleShowLayout,
 } from "react-admin"
 import { List as IList } from "immutable"
 import FontAwesomeIcon from "@fortawesome/react-fontawesome"
@@ -30,7 +32,13 @@ export const List = props => {
         </AdminList>
     )
 }
-
+export const Show = (props) => (
+    <AdminShow title={<Title />} {...props}>
+        <SimpleShowLayout>
+            <TextField source="name" />
+        </SimpleShowLayout>
+    </AdminShow>
+)
 export const Title = ({ record }) => {
     return <span>School {record.name ? `"${record.name}"` : ""}</span>
 }

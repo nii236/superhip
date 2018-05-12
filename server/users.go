@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/antonholmquist/jason"
@@ -13,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/lib/pq"
-	"github.com/nii236/superhip/server/models"
+	"github.com/nii236/superhip/models"
 
 	"github.com/go-chi/chi"
 )
@@ -38,7 +37,7 @@ func userRouter(db *DB) http.Handler {
 }
 
 func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetListRequest{}
+	req := &models.GetListRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -53,7 +52,7 @@ func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	resp := &Response{
+	resp := &models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}
@@ -62,7 +61,7 @@ func usersGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetOneRequest{}
+	req := &models.GetOneRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -71,7 +70,7 @@ func usersGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 
 	err := db.Read(result, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
-		resp := &Response{
+		resp := &models.Response{
 			Total:   0,
 			Data:    mustMarshal(models.UserList{}),
 			Message: err.Error(),
@@ -83,7 +82,7 @@ func usersGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.UserList{result}),
 	}))
@@ -91,7 +90,7 @@ func usersGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetManyRequest{}
+	req := &models.GetManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -111,7 +110,7 @@ func usersGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))
@@ -120,7 +119,7 @@ func usersGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetManyReferenceRequest{}
+	req := &models.GetManyReferenceRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -135,7 +134,7 @@ func usersGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (int,
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))
@@ -144,7 +143,7 @@ func usersGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (int,
 }
 
 func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &UpdateRequest{}
+	req := &models.UpdateRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -206,20 +205,39 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	schoolFKs, err := obj.GetStringArray("school_ids")
+	err = db.DropJoins("schools_users", "user_id", updated.ID.String())
 	if err != nil {
-		return 500, fmt.Errorf("school_ids: %s", err)
+		return 500, fmt.Errorf("could not drop joins: %s", err)
 	}
-
-	db.DropJoins("schools_users", "user_id", updated.ID.String())
-	for _, v := range schoolFKs {
-		err = db.MakeJoin("schools_users", "school_id", "user_id", v, updated.ID.String())
-		if err != nil {
-			return 500, err
+	schoolFKs, err := obj.GetStringArray("school_ids")
+	if err == nil {
+		for _, v := range schoolFKs {
+			err = db.MakeJoin("schools_users", "school_id", "user_id", v, updated.ID.String())
+			if err != nil {
+				return 500, err
+			}
 		}
+	} else {
+		fmt.Println("no school ids provided")
 	}
 
-	w.Write(mustMarshal(&Response{
+	err = db.DropJoins("roles_users", "user_id", updated.ID.String())
+	if err != nil {
+		return 500, fmt.Errorf("could not drop joins: %s", err)
+	}
+	roleFKs, err := obj.GetStringArray("role_ids")
+	if err == nil {
+		for _, v := range roleFKs {
+			err = db.MakeJoin("roles_users", "role_id", "user_id", v, updated.ID.String())
+			if err != nil {
+				return 500, err
+			}
+		}
+	} else {
+		fmt.Println("no row ids provided")
+	}
+
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal([]*models.User{updated}),
 	}))
@@ -228,7 +246,7 @@ func usersUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &UpdateManyRequest{}
+	req := &models.UpdateManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -287,7 +305,7 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(updated),
 		Data:  mustMarshal(updated),
 	}))
@@ -295,7 +313,7 @@ func usersUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 }
 
 func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &CreateRequest{}
+	req := &models.CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		return 500, err
@@ -341,7 +359,6 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	createWith.PasswordHash = hashedB64
 
 	created := &models.User{}
-	log.Printf("%+v", createWith)
 	err = db.Create(created, createWith)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
@@ -350,20 +367,40 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	schoolFKs, err := obj.GetStringArray("school_ids")
+	err = db.DropJoins("schools_users", "user_id", created.ID.String())
 	if err != nil {
-		return 500, fmt.Errorf("schools_id: %s", err)
+		return 500, fmt.Errorf("could not drop joins: %s", err)
 	}
 
-	for _, v := range schoolFKs {
-		fmt.Println("MAKE JOIN")
-		err = db.MakeJoin("schools_users", "school_id", "user_id", v, created.ID.String())
-		if err != nil {
-			return 500, err
+	schoolFKs, err := obj.GetStringArray("school_ids")
+	if err == nil {
+		for _, v := range schoolFKs {
+			err = db.MakeJoin("schools_users", "school_id", "user_id", v, created.ID.String())
+			if err != nil {
+				return 500, err
+			}
 		}
+	} else {
+		fmt.Println("no school ids provided")
 	}
 
-	w.Write(mustMarshal(&Response{
+	err = db.DropJoins("roles_users", "user_id", created.ID.String())
+	if err != nil {
+		return 500, fmt.Errorf("could not drop joins: %s", err)
+	}
+	roleFKs, err := obj.GetStringArray("role_ids")
+	if err == nil {
+		for _, v := range roleFKs {
+			err = db.MakeJoin("roles_users", "role_id", "user_id", v, created.ID.String())
+			if err != nil {
+				return 500, err
+			}
+		}
+	} else {
+		fmt.Println("no row ids provided")
+	}
+
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.UserList{created}),
 	}))
@@ -372,7 +409,7 @@ func usersCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteRequest{}
+	req := &models.DeleteRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -381,7 +418,7 @@ func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 
 	err := db.Delete(result, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
-		resp := &Response{
+		resp := &models.Response{
 			Total:   0,
 			Data:    mustMarshal(models.UserList{}),
 			Message: err.Error(),
@@ -393,7 +430,7 @@ func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.UserList{result}),
 	}))
@@ -401,7 +438,7 @@ func usersDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func usersDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteManyRequest{}
+	req := &models.DeleteManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -421,7 +458,7 @@ func usersDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))

@@ -95,7 +95,6 @@ func (db *DB) Reference(collection Collection, table string, column string, ID s
 // Create implements the Crudder interface
 func (db *DB) Create(target Item, source Item) error {
 	params := source.CreateParams()
-	log.Println(params)
 	return db.conn.Get(target, source.CreateQuery(), params...)
 }
 

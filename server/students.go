@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/satori/go.uuid"
@@ -12,7 +11,7 @@ import (
 	"github.com/antonholmquist/jason"
 
 	_ "github.com/lib/pq"
-	"github.com/nii236/superhip/server/models"
+	"github.com/nii236/superhip/models"
 
 	"github.com/go-chi/chi"
 )
@@ -37,7 +36,7 @@ func studentRouter(db *DB) http.Handler {
 }
 
 func studentsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetListRequest{}
+	req := &models.GetListRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -52,7 +51,7 @@ func studentsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 		return 500, err
 	}
 
-	resp := &Response{
+	resp := &models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}
@@ -61,7 +60,7 @@ func studentsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 }
 
 func studentsGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetOneRequest{}
+	req := &models.GetOneRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -70,7 +69,7 @@ func studentsGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 
 	err := db.Read(result, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
-		resp := &Response{
+		resp := &models.Response{
 			Total:   0,
 			Data:    mustMarshal(models.StudentList{}),
 			Message: err.Error(),
@@ -82,7 +81,7 @@ func studentsGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.StudentList{result}),
 	}))
@@ -90,7 +89,7 @@ func studentsGetOne(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
 func studentsGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetManyRequest{}
+	req := &models.GetManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -110,7 +109,7 @@ func studentsGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))
@@ -119,7 +118,7 @@ func studentsGetMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error
 }
 
 func studentsGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &GetManyReferenceRequest{}
+	req := &models.GetManyReferenceRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -134,7 +133,7 @@ func studentsGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (i
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))
@@ -143,7 +142,7 @@ func studentsGetManyReference(db *DB, w http.ResponseWriter, r *http.Request) (i
 }
 
 func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &UpdateRequest{}
+	req := &models.UpdateRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -176,7 +175,7 @@ func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	}
 
 	updated := &models.Student{}
-	fmt.Printf("%+v\n", existing)
+
 	err = db.Update(updated, existing, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
@@ -185,7 +184,7 @@ func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal([]*models.Student{updated}),
 	}))
@@ -194,7 +193,7 @@ func studentsUpdate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
 func studentsUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &UpdateManyRequest{}
+	req := &models.UpdateManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -225,7 +224,6 @@ func studentsUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 
 	updated := models.StudentList{}
 
-	fmt.Println(updateTo)
 	err = db.UpdateMany(&updated, updateTo, IDs)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
@@ -234,7 +232,7 @@ func studentsUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(updated),
 		Data:  mustMarshal(updated),
 	}))
@@ -242,7 +240,7 @@ func studentsUpdateMany(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 }
 
 func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &CreateRequest{}
+	req := &models.CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		return 500, err
@@ -261,7 +259,6 @@ func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 	}
 	schoolFK, err := obj.GetString("school_id")
 	if err != nil {
-		fmt.Printf("%+v", string(req.Data))
 		return 500, fmt.Errorf("school_id: %s", err)
 	}
 	createWith.SchoolID, err = uuid.FromString(schoolFK)
@@ -269,7 +266,6 @@ func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 		return 500, err
 	}
 	created := &models.Student{}
-	log.Printf("%+v", createWith)
 	err = db.Create(created, createWith)
 	if err != nil && err == sql.ErrNoRows {
 		return 404, err
@@ -278,7 +274,7 @@ func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.StudentList{created}),
 	}))
@@ -287,7 +283,7 @@ func studentsCreate(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
 func studentsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteRequest{}
+	req := &models.DeleteRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -296,7 +292,7 @@ func studentsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 
 	err := db.Delete(result, req.ID.String())
 	if err != nil && err == sql.ErrNoRows {
-		resp := &Response{
+		resp := &models.Response{
 			Total:   0,
 			Data:    mustMarshal(models.StudentList{}),
 			Message: err.Error(),
@@ -308,7 +304,7 @@ func studentsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: 1,
 		Data:  mustMarshal(models.StudentList{result}),
 	}))
@@ -316,7 +312,7 @@ func studentsDelete(db *DB, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
 func studentsDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &DeleteManyRequest{}
+	req := &models.DeleteManyRequest{}
 	mustDecode(r.Body, req)
 
 	defer r.Body.Close()
@@ -336,7 +332,7 @@ func studentsDeleteMany(db *DB, w http.ResponseWriter, r *http.Request) (int, er
 		return 500, err
 	}
 
-	w.Write(mustMarshal(&Response{
+	w.Write(mustMarshal(&models.Response{
 		Total: len(result),
 		Data:  mustMarshal(result),
 	}))

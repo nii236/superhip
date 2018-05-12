@@ -28,7 +28,7 @@ func authRouter(db *DB) http.Handler {
 
 func users(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	// signup
-	// req := &SignupRequest{}
+	// req := &models.SignupRequest{}
 	// err := json.NewDecoder(r.Body).Decode(req)
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -71,7 +71,7 @@ type SigninRequest struct {
 
 func refreshToken(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	// signin
-	// req := &SigninRequest{}
+	// req := &models.SigninRequest{}
 	// err := json.NewDecoder(r.Body).Decode(req)
 	// if err != nil {
 	// 	fmt.Println(err)

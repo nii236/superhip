@@ -1,5 +1,23 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TABLE permissions (
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	name TEXT NOT NULL,
+	metadata jsonb NOT NULL DEFAULT '{}',
+	archived boolean NOT NULL DEFAULT false,
+	archived_on timestamp,
+	created_at timestamp NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE roles (
+	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+	name TEXT NOT NULL,
+	metadata jsonb NOT NULL DEFAULT '{}',
+	archived boolean NOT NULL DEFAULT false,
+	archived_on timestamp,
+	created_at timestamp NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE schools (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
 	name TEXT NOT NULL,
@@ -24,10 +42,6 @@ CREATE TABLE users (
 	CONSTRAINT users_email_key UNIQUE (email)
 );
 
-CREATE TABLE schools_users (
-	school_id UUID NOT NULL REFERENCES schools(id),
-	user_id UUID NOT NULL REFERENCES users(id)
-);
 
 CREATE TABLE teams (
 	id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
@@ -47,6 +61,21 @@ CREATE TABLE students (
 	archived boolean NOT NULL DEFAULT false,
 	archived_on timestamp,
 	created_at timestamp NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE schools_users (
+	school_id UUID NOT NULL REFERENCES schools(id),
+	user_id UUID NOT NULL REFERENCES users(id)
+);
+
+CREATE TABLE roles_users (
+	role_id UUID NOT NULL REFERENCES roles(id),
+	user_id UUID NOT NULL REFERENCES users(id)
+);
+
+CREATE TABLE roles_permissions (
+	role_id UUID NOT NULL REFERENCES roles(id),
+	permission_id UUID NOT NULL REFERENCES permissions(id)
 );
 
 CREATE TABLE teams_students (

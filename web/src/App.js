@@ -1,4 +1,6 @@
 import React from "react"
+import * as roles from "./components/roles"
+import * as permissions from "./components/permissions"
 import * as schools from "./components/schools"
 import * as users from "./components/users"
 import * as teams from "./components/teams"
@@ -20,10 +22,12 @@ const dataProvider = data.Provider("http://localhost:8080")
 const App = props => {
 	return (
 		<Admin dataProvider={dataProvider} authProvider={auth.Provider}>
-			<Resource edit={schools.Edit} create={schools.Create} name="schools" list={schools.List} />
-			<Resource edit={users.Edit} create={users.Create} name="users" list={users.List} />
-			<Resource edit={teams.Edit} create={teams.Create} name="teams" list={teams.List} />
-			<Resource edit={students.Edit} create={students.Create} name="students" list={students.List} />
+			<Resource show={roles.Show} edit={roles.Edit} create={roles.Create} name="roles" list={roles.List} />
+			<Resource show={permissions.Show} edit={permissions.Edit} create={permissions.Create} name="permissions" list={permissions.List} />
+			<Resource show={schools.Show} edit={schools.Edit} create={schools.Create} name="schools" list={schools.List} />
+			<Resource show={users.Show} edit={users.Edit} create={users.Create} name="users" list={users.List} />
+			<Resource show={teams.Show} edit={teams.Edit} create={teams.Create} name="teams" list={teams.List} />
+			<Resource show={students.Show} edit={students.Edit} create={students.Create} name="students" list={students.List} />
 		</Admin>
 	)
 }
