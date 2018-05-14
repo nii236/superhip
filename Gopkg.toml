@@ -68,3 +68,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/manveru/faker"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gocarina/gocsv"

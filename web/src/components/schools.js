@@ -8,6 +8,7 @@ import {
     TextInput,
     LongTextInput,
     EditButton,
+    ShowButton,
     Resource,
     Edit as AdminEdit,
     List as AdminList,
@@ -16,6 +17,9 @@ import {
     Datagrid,
     TextField,
     SimpleShowLayout,
+    ReferenceArrayField,
+    SingleFieldList,
+    ChipField
 } from "react-admin"
 import { List as IList } from "immutable"
 import FontAwesomeIcon from "@fortawesome/react-fontawesome"
@@ -28,6 +32,7 @@ export const List = props => {
             <Datagrid>
                 <TextField source="name" />
                 <EditButton />
+                <ShowButton />
             </Datagrid>
         </AdminList>
     )

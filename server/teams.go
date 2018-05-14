@@ -55,7 +55,7 @@ func teamsGetList(db *DB, w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil && err != sql.ErrNoRows {
 		return 500, err
 	}
-	total, err := db.Total("users")
+	total, err := db.Total("teams")
 	if err != nil {
 		return 500, err
 	}
